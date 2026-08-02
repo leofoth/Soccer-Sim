@@ -1,0 +1,1669 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Soccer Simulator 3000</title>
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#0b1220">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Soccer Sim">
+<link rel="apple-touch-icon" href="./icon.svg">
+<link rel="icon" href="./icon.svg" type="image/svg+xml">
+<script src="./dicebear.bundle.js"></script>
+<style>
+  :root{
+    --bg:#0b1220; --bg2:#0f1a2e; --card:#152238; --card2:#1b2c48;
+    --line:#26385a; --txt:#e8eefc; --mut:#8fa3c8; --acc:#00e07a; --acc2:#12b76a;
+    --warn:#ffb020; --bad:#ff5d5d; --gold:#ffd257; --chip:#22345a; --radius:16px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:radial-gradient(1200px 700px at 50% -10%, #16233d 0%, var(--bg) 55%) fixed;
+    color:var(--txt); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    min-height:100vh; line-height:1.45;
+  }
+  .wrap{max-width:760px; margin:0 auto; padding:20px 16px 60px}
+  header.top{display:flex; align-items:center; gap:12px; margin-bottom:18px}
+  header.top .logo{font-size:26px}
+  header.top h1{font-size:19px; margin:0; letter-spacing:.3px; font-weight:800}
+  header.top .sub{color:var(--mut); font-size:12px; margin-top:1px}
+  .card{background:linear-gradient(180deg,var(--card) 0%,var(--bg2) 120%); border:1px solid var(--line); border-radius:var(--radius); padding:18px; margin-bottom:16px; box-shadow:0 8px 30px rgba(0,0,0,.25)}
+  .card h2{margin:0 0 6px; font-size:16px; position:relative; padding-left:12px}
+  .card h2::before{content:""; position:absolute; left:0; top:3px; bottom:3px; width:4px; border-radius:3px; background:linear-gradient(var(--acc),var(--acc2))}
+  .card .hint{color:var(--mut); font-size:13px; margin:0 0 14px}
+  label{display:block; font-size:12px; color:var(--mut); margin:14px 0 6px; text-transform:uppercase; letter-spacing:.5px}
+  input[type=text], select{
+    width:100%; background:#0c1526; border:1px solid var(--line); color:var(--txt);
+    padding:11px 12px; border-radius:11px; font-size:15px; outline:none;
+  }
+  input[type=text]:focus, select:focus{border-color:var(--acc)}
+  .row{display:grid; grid-template-columns:1fr 1fr; gap:12px}
+  .opts{display:flex; flex-wrap:wrap; gap:8px; margin-top:6px}
+  .opt{flex:1 1 auto; min-width:calc(50% - 8px); text-align:center; padding:10px 8px; background:#0c1526; border:1px solid var(--line); border-radius:11px; cursor:pointer; font-size:14px; user-select:none; transition:.12s}
+  .opt small{display:block; color:var(--mut); font-size:11px; margin-top:2px}
+  .opt:hover{border-color:#3a5488}
+  .opt.sel{border-color:var(--acc); background:rgba(0,224,122,.10); box-shadow:0 0 0 1px var(--acc) inset}
+  /* Positionsraster */
+  .posgrid{display:grid; grid-template-columns:repeat(4,1fr); gap:7px; margin-top:6px}
+  .poschip{text-align:center; padding:8px 4px; background:#0c1526; border:1px solid var(--line); border-radius:10px; cursor:pointer; user-select:none; transition:.12s}
+  .poschip b{font-size:14px; letter-spacing:.5px}
+  .poschip small{display:block; color:var(--mut); font-size:10px; margin-top:1px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .poschip:hover{border-color:#3a5488}
+  .poschip.sel{border-color:var(--acc); background:rgba(0,224,122,.10); box-shadow:0 0 0 1px var(--acc) inset}
+  .arealbl{font-size:10px; color:var(--mut); letter-spacing:1px; text-transform:uppercase; margin:12px 0 2px}
+  /* Avatar-Customizer */
+  .avwrap{display:flex; gap:16px; align-items:flex-start; flex-wrap:wrap; margin-top:6px}
+  .avprev{width:104px; height:104px; flex:none; border-radius:50%; overflow:hidden; box-shadow:0 6px 18px rgba(0,0,0,.35)}
+  .dbav{display:inline-block; border-radius:50%; overflow:hidden}
+  .dbav svg{width:100%; height:100%; display:block}
+  .avctrl{flex:1; min-width:240px}
+  .avrow{display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin:8px 0}
+  .avrow .cap{font-size:11px; color:var(--mut); width:74px; text-transform:uppercase; letter-spacing:.5px}
+  .sw{width:26px; height:26px; border-radius:50%; cursor:pointer; border:2px solid #0c1526; box-shadow:0 0 0 1px var(--line)}
+  .sw.sel{box-shadow:0 0 0 2px var(--acc)}
+  .hchip{padding:6px 11px; background:#0c1526; border:1px solid var(--line); border-radius:9px; cursor:pointer; font-size:13px}
+  .hchip.sel{border-color:var(--acc); box-shadow:0 0 0 1px var(--acc) inset}
+  button.primary{width:100%; margin-top:20px; padding:14px; font-size:16px; font-weight:800; color:#04240f; background:linear-gradient(180deg,var(--acc),var(--acc2)); border:none; border-radius:13px; cursor:pointer; letter-spacing:.3px}
+  button.ghost{width:100%; margin-top:10px; padding:12px; font-size:14px; font-weight:700; color:var(--txt); background:transparent; border:1px solid var(--line); border-radius:12px; cursor:pointer}
+  button.ghost:hover{border-color:#3a5488}
+  .playerbar{display:flex; align-items:center; gap:14px; margin-bottom:16px; background:linear-gradient(180deg,var(--card2),var(--card)); border:1px solid var(--line); border-radius:var(--radius); padding:14px 16px}
+  .playerbar .face{width:48px; height:48px; border-radius:50%; overflow:hidden; flex:none}
+  .playerbar .meta{flex:1; min-width:0}
+  .playerbar .nm{font-weight:800; font-size:17px}
+  .playerbar .dt{color:var(--mut); font-size:12.5px; margin-top:1px}
+  .ovrbadge{text-align:center; padding:4px 2px}
+  .ovrbadge .n{font-size:26px; font-weight:900; line-height:1; color:var(--acc)}
+  .ovrbadge .l{font-size:10px; color:var(--mut); letter-spacing:1px}
+  .kv{display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px dashed var(--line); font-size:14px}
+  .kv:last-child{border-bottom:none}
+  .kv .k{color:var(--mut)}
+  .kv .v{font-weight:700}
+  .rolebox{display:flex; align-items:center; gap:10px; padding:12px; border-radius:12px; background:#0c1526; border:1px solid var(--line); margin-top:6px}
+  .rolebox .dot{width:10px;height:10px;border-radius:50%}
+  .rolebox b{font-size:15px}
+  .rolebox small{color:var(--mut); display:block}
+  .statgrid{display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin:6px 0 4px}
+  .stat{background:linear-gradient(180deg,#14213a,#0b1424); border:1px solid var(--line); border-radius:12px; padding:12px 8px; text-align:center}
+  .stat .n{font-size:22px; font-weight:900}
+  .stat .l{font-size:11px; color:var(--mut); margin-top:2px; text-transform:uppercase; letter-spacing:.5px}
+  .note{background:rgba(255,176,32,.08); border:1px solid rgba(255,176,32,.35); color:#ffe0a3; padding:11px 13px; border-radius:12px; font-size:13.5px; margin:10px 0}
+  .note.good{background:rgba(0,224,122,.08); border-color:rgba(0,224,122,.4); color:#b6ffd9}
+  .note.bad{background:rgba(255,93,93,.08); border-color:rgba(255,93,93,.4); color:#ffc4c4}
+  .offer{display:flex; align-items:center; gap:12px; padding:12px; border:1px solid var(--line); border-radius:12px; margin-top:10px; background:#0c1526}
+  .offer .info{flex:1; min-width:0}
+  .offer .info b{font-size:15px}
+  .offer .info small{color:var(--mut); display:block}
+  .offer button{padding:9px 14px; border-radius:10px; border:none; font-weight:800; cursor:pointer; background:var(--acc); color:#04240f; flex:none}
+  .lvlpill{font-size:11px; font-weight:800; padding:2px 8px; border-radius:20px; background:var(--chip); color:#cde0ff}
+  table.career{width:100%; border-collapse:collapse; font-size:12.5px; margin-top:8px}
+  table.career th,table.career td{padding:7px 6px; text-align:center; border-bottom:1px solid var(--line)}
+  table.career th{color:var(--mut); font-weight:600; font-size:11px; text-transform:uppercase; letter-spacing:.3px}
+  table.career td:nth-child(2){text-align:left}
+  .verdict{text-align:center; padding:8px 0 4px}
+  .verdict .big{font-size:22px; font-weight:900; color:var(--gold)}
+  .verdict .sm{color:var(--mut); font-size:13px}
+  .trophies{display:flex; flex-wrap:wrap; gap:6px; margin-top:8px}
+  .trophy{font-size:12px; padding:5px 10px; border-radius:20px; background:rgba(255,210,87,.12); border:1px solid rgba(255,210,87,.4); color:#ffe6a8}
+  .tag{display:inline-block; font-size:11px; padding:2px 8px; border-radius:20px; background:var(--chip); color:#cde0ff; margin-left:6px; vertical-align:middle}
+  .pbpill{font-size:11px; font-weight:700; background:#0c1526; border:1px solid var(--line); padding:2px 8px; border-radius:20px; white-space:nowrap}
+  .halfopen{font-size:11.5px; color:var(--mut); margin-top:2px; text-align:center}
+  .foot{text-align:center; color:var(--mut); font-size:11px; margin-top:20px}
+  @media(max-width:480px){ .opt{min-width:100%} .posgrid{grid-template-columns:repeat(3,1fr)} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="logo">⚽</div>
+    <div>
+      <h1>Soccer Simulator 3000</h1>
+      <div class="sub">Deine Profikarriere – vom Niemand zum Weltstar</div>
+    </div>
+  </header>
+  <div id="app"></div>
+  <div class="foot">Halb-offen: Rolle wird vorher gezeigt · Ergebnis bleibt Überraschung (Poisson-Varianz)</div>
+</div>
+
+<script>
+/* ============================ HELPERS ============================ */
+const R=Math.random;
+const rint=(a,b)=>Math.floor(R()*(b-a+1))+a;
+const pick=a=>a[Math.floor(R()*a.length)];
+const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
+const logistic=x=>1/(1+Math.exp(-x));
+function poisson(lam){
+  if(lam<=0) return 0;
+  if(lam>30) return Math.max(0,Math.round(lam+Math.sqrt(lam)*gauss()));
+  let L=Math.exp(-lam),k=0,p=1; do{k++;p*=R();}while(p>L); return k-1;
+}
+function gauss(){let u=0,v=0;while(u===0)u=R();while(v===0)v=R();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);}
+function shade(hex,amt){
+  let c=hex.replace('#','');
+  let r=clamp(parseInt(c.slice(0,2),16)+amt,0,255),g=clamp(parseInt(c.slice(2,4),16)+amt,0,255),b=clamp(parseInt(c.slice(4,6),16)+amt,0,255);
+  return '#'+[r,g,b].map(x=>Math.round(x).toString(16).padStart(2,'0')).join('');
+}
+const tierOf=l=>l>=83?1:l>=76?2:l>=68?3:4;
+// Gehalt (Mio./Jahr) je nach OVR (Starpower) & Klub-Level
+function baseWage(clubLevel, ovr){ return Math.max(0.1, Math.round(0.15*Math.pow(1.10,ovr-60)*(0.6+clubLevel/150)*10)/10); }
+function fmtMoney(m){ m=m||0; if(m>=1) return "€"+(Math.round(m*10)/10)+" Mio."; return "€"+Math.round(m*1000)+"k"; }
+
+/* ============================ DATEN ============================ */
+const NATIONS = [
+  // UEFA
+  {name:"Frankreich",thr:85,conf:"UEFA"},{name:"England",thr:84,conf:"UEFA"},{name:"Spanien",thr:84,conf:"UEFA"},
+  {name:"Deutschland",thr:83,conf:"UEFA"},{name:"Portugal",thr:83,conf:"UEFA"},{name:"Niederlande",thr:81,conf:"UEFA"},
+  {name:"Italien",thr:81,conf:"UEFA"},{name:"Belgien",thr:81,conf:"UEFA"},{name:"Dänemark",thr:79,conf:"UEFA"},
+  {name:"Kroatien",thr:79,conf:"UEFA"},{name:"Schweiz",thr:77,conf:"UEFA"},{name:"Polen",thr:77,conf:"UEFA"},
+  {name:"Serbien",thr:77,conf:"UEFA"},{name:"Österreich",thr:76,conf:"UEFA"},{name:"Norwegen",thr:76,conf:"UEFA"},
+  {name:"Türkei",thr:76,conf:"UEFA"},{name:"Ukraine",thr:75,conf:"UEFA"},{name:"Schottland",thr:75,conf:"UEFA"},
+  {name:"Schweden",thr:75,conf:"UEFA"},{name:"Tschechien",thr:74,conf:"UEFA"},{name:"Wales",thr:74,conf:"UEFA"},
+  {name:"Ungarn",thr:73,conf:"UEFA"},{name:"Griechenland",thr:73,conf:"UEFA"},{name:"Rumänien",thr:72,conf:"UEFA"},
+  // CONMEBOL
+  {name:"Brasilien",thr:85,conf:"CONMEBOL"},{name:"Argentinien",thr:84,conf:"CONMEBOL"},{name:"Uruguay",thr:80,conf:"CONMEBOL"},
+  {name:"Kolumbien",thr:79,conf:"CONMEBOL"},{name:"Chile",thr:76,conf:"CONMEBOL"},{name:"Ecuador",thr:75,conf:"CONMEBOL"},
+  {name:"Peru",thr:74,conf:"CONMEBOL"},{name:"Paraguay",thr:73,conf:"CONMEBOL"},{name:"Venezuela",thr:73,conf:"CONMEBOL"},{name:"Bolivien",thr:70,conf:"CONMEBOL"},
+  // CAF
+  {name:"Marokko",thr:78,conf:"CAF"},{name:"Senegal",thr:78,conf:"CAF"},{name:"Nigeria",thr:77,conf:"CAF"},
+  {name:"Ägypten",thr:76,conf:"CAF"},{name:"Elfenbeinküste",thr:76,conf:"CAF"},{name:"Algerien",thr:76,conf:"CAF"},
+  {name:"Kamerun",thr:75,conf:"CAF"},{name:"Ghana",thr:75,conf:"CAF"},{name:"Tunesien",thr:74,conf:"CAF"},{name:"Mali",thr:74,conf:"CAF"},
+  // AFC
+  {name:"Japan",thr:76,conf:"AFC"},{name:"Südkorea",thr:76,conf:"AFC"},{name:"Iran",thr:75,conf:"AFC"},
+  {name:"Australien",thr:74,conf:"AFC"},{name:"Saudi-Arabien",thr:73,conf:"AFC"},{name:"Katar",thr:72,conf:"AFC"},
+  {name:"Irak",thr:71,conf:"AFC"},{name:"Usbekistan",thr:71,conf:"AFC"},
+  // CONCACAF
+  {name:"Mexiko",thr:77,conf:"CONCACAF"},{name:"USA",thr:76,conf:"CONCACAF"},{name:"Kanada",thr:74,conf:"CONCACAF"},
+  {name:"Costa Rica",thr:72,conf:"CONCACAF"},{name:"Panama",thr:71,conf:"CONCACAF"},{name:"Jamaika",thr:71,conf:"CONCACAF"},{name:"Honduras",thr:70,conf:"CONCACAF"}
+];
+
+// Echte Vereine & Ligen (Squad-Level ~ FIFA-OVR).  lg = Liga
+const CLUBS = [
+  // --- Elite (Level 83+) ---
+  {n:"Real Madrid",lg:"La Liga",l:86},{n:"Manchester City",lg:"Premier League",l:85},
+  {n:"Bayern München",lg:"Bundesliga",l:85},{n:"FC Barcelona",lg:"La Liga",l:84},
+  {n:"Arsenal",lg:"Premier League",l:84},{n:"Liverpool",lg:"Premier League",l:84},
+  {n:"Bayer Leverkusen",lg:"Bundesliga",l:83},{n:"Inter Mailand",lg:"Serie A",l:84},
+  {n:"Paris Saint-Germain",lg:"Ligue 1",l:84},{n:"Atlético Madrid",lg:"La Liga",l:83},
+  // --- Stark (76–82) ---
+  {n:"Manchester United",lg:"Premier League",l:81},{n:"Chelsea",lg:"Premier League",l:81},
+  {n:"Tottenham Hotspur",lg:"Premier League",l:80},{n:"Newcastle United",lg:"Premier League",l:80},
+  {n:"Aston Villa",lg:"Premier League",l:79},
+  {n:"Juventus Turin",lg:"Serie A",l:82},{n:"AC Mailand",lg:"Serie A",l:81},
+  {n:"SSC Neapel",lg:"Serie A",l:82},{n:"Atalanta Bergamo",lg:"Serie A",l:80},{n:"AS Rom",lg:"Serie A",l:79},
+  {n:"RB Leipzig",lg:"Bundesliga",l:82},{n:"Borussia Dortmund",lg:"Bundesliga",l:81},
+  {n:"VfB Stuttgart",lg:"Bundesliga",l:78},{n:"Eintracht Frankfurt",lg:"Bundesliga",l:78},
+  {n:"Athletic Bilbao",lg:"La Liga",l:79},{n:"Girona FC",lg:"La Liga",l:78},
+  {n:"Real Sociedad",lg:"La Liga",l:78},{n:"Real Betis",lg:"La Liga",l:77},{n:"Villarreal",lg:"La Liga",l:77},
+  {n:"AS Monaco",lg:"Ligue 1",l:79},{n:"Olympique Marseille",lg:"Ligue 1",l:78},
+  {n:"OSC Lille",lg:"Ligue 1",l:77},{n:"Olympique Lyon",lg:"Ligue 1",l:77},
+  {n:"Benfica Lissabon",lg:"Liga Portugal",l:79},{n:"FC Porto",lg:"Liga Portugal",l:78},
+  {n:"Sporting Lissabon",lg:"Liga Portugal",l:79},
+  {n:"PSV Eindhoven",lg:"Eredivisie",l:78},{n:"Feyenoord",lg:"Eredivisie",l:77},{n:"Ajax Amsterdam",lg:"Eredivisie",l:76},
+  {n:"Galatasaray",lg:"Süper Lig",l:77},{n:"Fenerbahçe",lg:"Süper Lig",l:77},{n:"Celtic Glasgow",lg:"Scottish PL",l:76},
+  // --- Mittelfeld (68–75) ---
+  {n:"Brighton",lg:"Premier League",l:77},{n:"West Ham United",lg:"Premier League",l:76},
+  {n:"Crystal Palace",lg:"Premier League",l:75},{n:"Brentford",lg:"Premier League",l:74},
+  {n:"Fulham",lg:"Premier League",l:74},{n:"Everton",lg:"Premier League",l:73},{n:"AFC Bournemouth",lg:"Premier League",l:74},
+  {n:"AC Florenz",lg:"Serie A",l:77},{n:"FC Bologna",lg:"Serie A",l:76},{n:"Lazio Rom",lg:"Serie A",l:78},
+  {n:"FC Turin",lg:"Serie A",l:74},{n:"Udinese",lg:"Serie A",l:73},
+  {n:"SC Freiburg",lg:"Bundesliga",l:76},{n:"VfL Wolfsburg",lg:"Bundesliga",l:75},
+  {n:"Bor. Mönchengladbach",lg:"Bundesliga",l:74},{n:"TSG Hoffenheim",lg:"Bundesliga",l:74},
+  {n:"Werder Bremen",lg:"Bundesliga",l:73},{n:"FSV Mainz 05",lg:"Bundesliga",l:72},{n:"FC Augsburg",lg:"Bundesliga",l:72},
+  {n:"FC Sevilla",lg:"La Liga",l:76},{n:"FC Valencia",lg:"La Liga",l:75},
+  {n:"CA Osasuna",lg:"La Liga",l:73},{n:"Celta Vigo",lg:"La Liga",l:73},{n:"Getafe CF",lg:"La Liga",l:72},
+  {n:"RC Lens",lg:"Ligue 1",l:76},{n:"Stade Rennes",lg:"Ligue 1",l:75},{n:"OGC Nizza",lg:"Ligue 1",l:76},
+  {n:"Rangers FC",lg:"Scottish PL",l:74},{n:"Sporting Braga",lg:"Liga Portugal",l:74},
+  {n:"FC Brügge",lg:"Pro League",l:74},{n:"RSC Anderlecht",lg:"Pro League",l:72},
+  // --- Underdogs (58–67 · Start) ---
+  {n:"Leicester City",lg:"Championship",l:73},{n:"FC Southampton",lg:"Championship",l:72},
+  {n:"Ipswich Town",lg:"Championship",l:69},{n:"Norwich City",lg:"Championship",l:68},
+  {n:"Sunderland",lg:"Championship",l:68},{n:"Bristol City",lg:"Championship",l:65},
+  {n:"Preston North End",lg:"Championship",l:64},{n:"Millwall FC",lg:"Championship",l:63},
+  {n:"Plymouth Argyle",lg:"Championship",l:61},{n:"Portsmouth FC",lg:"Championship",l:62},
+  {n:"Schalke 04",lg:"2. Bundesliga",l:67},{n:"Hamburger SV",lg:"2. Bundesliga",l:69},
+  {n:"Hertha BSC",lg:"2. Bundesliga",l:67},{n:"1. FC Kaiserslautern",lg:"2. Bundesliga",l:65},
+  {n:"Fortuna Düsseldorf",lg:"2. Bundesliga",l:66},{n:"Karlsruher SC",lg:"2. Bundesliga",l:63},
+  {n:"Real Oviedo",lg:"LaLiga 2",l:64},{n:"Racing Santander",lg:"LaLiga 2",l:64},
+  {n:"Sporting Gijón",lg:"LaLiga 2",l:64},{n:"Real Zaragoza",lg:"LaLiga 2",l:63},
+  {n:"Sampdoria Genua",lg:"Serie B",l:66},{n:"US Palermo",lg:"Serie B",l:65},{n:"SSC Bari",lg:"Serie B",l:62},
+  {n:"AS Saint-Étienne",lg:"Ligue 2",l:67},{n:"Girondins Bordeaux",lg:"Ligue 2",l:63},{n:"FC Metz",lg:"Ligue 2",l:66},
+  // --- Deutschland 3. Liga ---
+  {n:"Arminia Bielefeld",lg:"3. Liga",l:61},{n:"Dynamo Dresden",lg:"3. Liga",l:60},{n:"1860 München",lg:"3. Liga",l:58},
+  {n:"Rot-Weiss Essen",lg:"3. Liga",l:57},{n:"1. FC Saarbrücken",lg:"3. Liga",l:57},{n:"SV Waldhof Mannheim",lg:"3. Liga",l:56},{n:"Erzgebirge Aue",lg:"3. Liga",l:55},
+  // --- Niederlande (Aufstockung + Eerste Divisie) ---
+  {n:"AZ Alkmaar",lg:"Eredivisie",l:74},{n:"FC Twente",lg:"Eredivisie",l:73},{n:"FC Utrecht",lg:"Eredivisie",l:70},
+  {n:"FC Groningen",lg:"Eerste Divisie",l:64},{n:"Willem II",lg:"Eerste Divisie",l:62},{n:"ADO Den Haag",lg:"Eerste Divisie",l:60},{n:"Roda JC",lg:"Eerste Divisie",l:59},{n:"FC Eindhoven",lg:"Eerste Divisie",l:58},
+  // --- Portugal (Aufstockung + Liga Portugal 2) ---
+  {n:"Vitória Guimarães",lg:"Liga Portugal",l:72},{n:"Boavista Porto",lg:"Liga Portugal",l:68},
+  {n:"SC Farense",lg:"Liga Portugal 2",l:63},{n:"CD Nacional",lg:"Liga Portugal 2",l:62},{n:"Leixões SC",lg:"Liga Portugal 2",l:60},{n:"UD Oliveirense",lg:"Liga Portugal 2",l:59},{n:"FC Penafiel",lg:"Liga Portugal 2",l:58},
+  // --- Türkei (Aufstockung + 1. Lig) ---
+  {n:"Beşiktaş",lg:"Süper Lig",l:75},{n:"Trabzonspor",lg:"Süper Lig",l:73},{n:"İst. Başakşehir",lg:"Süper Lig",l:71},
+  {n:"Eyüpspor",lg:"1. Lig",l:64},{n:"Bodrum FK",lg:"1. Lig",l:61},{n:"Kocaelispor",lg:"1. Lig",l:60},{n:"Bandırmaspor",lg:"1. Lig",l:59},{n:"Sakaryaspor",lg:"1. Lig",l:58},
+  // --- Schottland (Aufstockung + Championship) ---
+  {n:"Heart of Midlothian",lg:"Scottish PL",l:71},{n:"Aberdeen FC",lg:"Scottish PL",l:70},{n:"Hibernian FC",lg:"Scottish PL",l:69},
+  {n:"Dundee United",lg:"Scottish Championship",l:63},{n:"Partick Thistle",lg:"Scottish Championship",l:59},{n:"Raith Rovers",lg:"Scottish Championship",l:57},{n:"Ayr United",lg:"Scottish Championship",l:56},
+  // --- Belgien (Aufstockung + Challenger Pro League) ---
+  {n:"KRC Genk",lg:"Pro League",l:74},{n:"Royal Antwerpen",lg:"Pro League",l:72},{n:"KAA Gent",lg:"Pro League",l:72},{n:"Standard Lüttich",lg:"Pro League",l:70},
+  {n:"Beerschot",lg:"Challenger Pro League",l:61},{n:"RWD Molenbeek",lg:"Challenger Pro League",l:60},{n:"Lommel SK",lg:"Challenger Pro League",l:58},{n:"Club NXT",lg:"Challenger Pro League",l:56}
+];
+
+// Position: fam bestimmt Statistik-Modell · gloryKey = Ruhm-Stat für Legacy
+const POSITIONS = [
+  {code:"TW",label:"Torwart",       area:"Tor",       fam:"gk",     glory:"Zu-Null", gloryKey:"cs"},
+  {code:"IV",label:"Innenverteidiger",area:"Abwehr",  fam:"def",    glory:"Zu-Null", gloryKey:"cs"},
+  {code:"LV",label:"Linksverteidiger",area:"Abwehr",  fam:"def",    glory:"Zu-Null", gloryKey:"cs"},
+  {code:"RV",label:"Rechtsverteidiger",area:"Abwehr", fam:"def",    glory:"Zu-Null", gloryKey:"cs"},
+  {code:"DM",label:"Defensives Mittelfeld",area:"Mittelfeld",fam:"def",glory:"Zu-Null",gloryKey:"cs"},
+  {code:"ZM",label:"Zentrales Mittelfeld",area:"Mittelfeld",fam:"create",glory:"Assists",gloryKey:"assists"},
+  {code:"LM",label:"Linkes Mittelfeld",area:"Mittelfeld",fam:"create",glory:"Assists",gloryKey:"assists"},
+  {code:"RM",label:"Rechtes Mittelfeld",area:"Mittelfeld",fam:"create",glory:"Assists",gloryKey:"assists"},
+  {code:"OM",label:"Offensives Mittelfeld",area:"Mittelfeld",fam:"create",glory:"Assists",gloryKey:"assists"},
+  {code:"LF",label:"Linksaußen",    area:"Angriff",   fam:"score",  glory:"Tore",    gloryKey:"goals"},
+  {code:"RF",label:"Rechtsaußen",   area:"Angriff",   fam:"score",  glory:"Tore",    gloryKey:"goals"},
+  {code:"ST",label:"Stürmer",       area:"Angriff",   fam:"score",  glory:"Tore",    gloryKey:"goals"}
+];
+const posOf=c=>POSITIONS.find(p=>p.code===c);
+
+const POS_RATES = {
+  TW:{g:0,a:0.02}, IV:{g:0.05,a:0.05}, LV:{g:0.04,a:0.11}, RV:{g:0.04,a:0.11},
+  DM:{g:0.06,a:0.13}, ZM:{g:0.13,a:0.24}, LM:{g:0.15,a:0.28}, RM:{g:0.15,a:0.28},
+  OM:{g:0.24,a:0.34}, LF:{g:0.40,a:0.28}, RF:{g:0.40,a:0.28}, ST:{g:0.55,a:0.16}
+};
+
+const PLAYSTYLES = {
+  TW:[{n:"Linienkeeper",g:0,a:0,cs:1.12,d:"Paraden-Monster",insp:"Courtois"},{n:"Mitspielender Keeper",g:0,a:1.8,cs:1.0,d:"eröffnet das Spiel",insp:"Neuer"},{n:"Elfmeter-Killer",g:0,a:0,cs:1.06,d:"hält im Elfmeterschießen",insp:"Emi Martínez"}],
+  IV:[{n:"Abwehrchef",g:0.6,a:0.7,cs:1.14,d:"defensiver Fels",insp:"Van Dijk"},{n:"Ballspielender IV",g:0.8,a:1.6,cs:1.02,d:"baut das Spiel auf",insp:"John Stones"},{n:"Kopfball-Ungeheuer",g:1.9,a:0.8,cs:1.05,d:"gefährlich bei Standards",insp:"Sergio Ramos"}],
+  LV:[{n:"Defensiver LV",g:0.6,a:1.0,cs:1.12,d:"hinten sicher",insp:"Ferland Mendy"},{n:"Offensiver LV",g:1.2,a:1.7,cs:0.94,d:"stürmt mit nach vorn",insp:"Theo Hernández"},{n:"Wing-Back",g:1.4,a:1.9,cs:0.85,d:"rennt die ganze Linie",insp:"Alphonso Davies"}],
+  RV:[{n:"Defensiver RV",g:0.6,a:1.0,cs:1.12,d:"hinten sicher",insp:"Dani Carvajal"},{n:"Offensiver RV",g:1.2,a:1.7,cs:0.94,d:"stürmt mit nach vorn",insp:"Achraf Hakimi"},{n:"Wing-Back",g:1.4,a:1.9,cs:0.85,d:"rennt die ganze Linie",insp:"Trent Alexander-Arnold"}],
+  DM:[{n:"Abräumer",g:0.7,a:0.9,cs:1.14,d:"zerstört Angriffe",insp:"Kanté"},{n:"Box-to-Box",g:1.3,a:1.2,cs:1.0,d:"überall auf dem Feld",insp:"Rodri"},{n:"Tiefer Spielmacher",g:0.9,a:1.7,cs:1.03,d:"dirigiert von hinten",insp:"Toni Kroos"}],
+  ZM:[{n:"Box-to-Box",g:1.2,a:1.15,cs:1,d:"läuft alles kaputt",insp:"Bellingham"},{n:"Spielmacher",g:0.85,a:1.45,cs:1,d:"lenkt das Spiel",insp:"Modrić"},{n:"Torgefährlicher Achter",g:1.6,a:0.95,cs:1,d:"kommt zum Abschluss",insp:"Frank Lampard"}],
+  LM:[{n:"Klassischer Flügel",g:0.9,a:1.55,cs:1,d:"flankt gefährlich",insp:"David Beckham"},{n:"Invertierter Flügel",g:1.6,a:1.0,cs:1,d:"zieht nach innen",insp:"Arjen Robben"},{n:"Tempodribbler",g:1.25,a:1.35,cs:1,d:"nimmt jeden mit",insp:"Vinícius Júnior"}],
+  RM:[{n:"Klassischer Flügel",g:0.9,a:1.55,cs:1,d:"flankt gefährlich",insp:"David Beckham"},{n:"Invertierter Flügel",g:1.6,a:1.0,cs:1,d:"zieht nach innen",insp:"Arjen Robben"},{n:"Tempodribbler",g:1.25,a:1.35,cs:1,d:"nimmt jeden mit",insp:"Saka"}],
+  OM:[{n:"Klassischer Zehner",g:1.0,a:1.5,cs:1,d:"letzter Pass",insp:"De Bruyne"},{n:"Schattenstürmer",g:1.7,a:0.9,cs:1,d:"lauert am Sechzehner",insp:"Thomas Müller"},{n:"Regista",g:0.8,a:1.6,cs:1,d:"das kreative Hirn",insp:"Mesut Özil"}],
+  LF:[{n:"Torgefährlicher Flügel",g:1.4,a:0.9,cs:1,d:"schließt selbst ab",insp:"Salah"},{n:"Vorlagengeber",g:0.85,a:1.6,cs:1,d:"lebt für den Assist",insp:"Jack Grealish"},{n:"Invertierter Flügelstürmer",g:1.55,a:1.1,cs:1,d:"zieht rein und trifft",insp:"Mbappé"}],
+  RF:[{n:"Torgefährlicher Flügel",g:1.4,a:0.9,cs:1,d:"schließt selbst ab",insp:"Salah"},{n:"Vorlagengeber",g:0.85,a:1.6,cs:1,d:"lebt für den Assist",insp:"Jack Grealish"},{n:"Invertierter Flügelstürmer",g:1.55,a:1.1,cs:1,d:"zieht rein und trifft",insp:"Bukayo Saka"}],
+  ST:[{n:"Knipser",g:1.3,a:0.7,cs:1,d:"lebt vom Tor",insp:"Haaland"},{n:"Wandspieler",g:0.85,a:1.5,cs:1,d:"bindet und legt ab",insp:"Benzema"},{n:"Falsche Neun",g:1.05,a:1.25,cs:1,d:"lässt sich fallen",insp:"Messi"},{n:"Zielspieler",g:1.2,a:0.9,cs:1,d:"wuchtig im Strafraum",insp:"Harry Kane"}]
+};
+
+const TRAININGS = [
+  {n:"Kern-Attribut",desc:"+ Ruhm-Stat, normales Wachstum",grow:1.0,rate:1.12,risk:0,form:0},
+  {n:"Athletik & Fitness",desc:"weniger Verletzungen, mehr Ausdauer",grow:0.9,rate:1.0,risk:-0.05,form:0.05},
+  {n:"Intensiv-Camp",desc:"schnelleres OVR-Wachstum, HÖHERES Verletzungsrisiko",grow:1.6,rate:1.05,risk:0.10,form:0},
+  {n:"Regeneration",desc:"langsameres Wachstum, schützt vor Verletzung",grow:0.55,rate:1.0,risk:-0.07,form:0.10}
+];
+
+// Ligen-Kontext & Wettbewerbs-Runden
+const TOP_LEAGUES=["Premier League","La Liga","Bundesliga","Serie A","Ligue 1","Liga Portugal","Eredivisie","Süper Lig","Scottish PL","Pro League"];
+const SECOND_LEAGUES=["Championship","2. Bundesliga","LaLiga 2","Serie B","Ligue 2"];
+const CL_ROUNDS=["Gruppenphase","Achtelfinale","Viertelfinale","Halbfinale","Finale","Sieger 🏆"];
+const CUP_ROUNDS=["früh ausgeschieden","Achtelfinale","Viertelfinale","Halbfinale","Finale","Sieger 🏆"];
+const TOUR_ROUNDS=["Gruppenphase","Achtelfinale","Viertelfinale","Halbfinale","Finale","Sieger 🏆"];
+const NL_ROUNDS=["Gruppenphase","Viertelfinale","Final Four","Finale","Sieger 🏆"];
+function leagueContext(lg,pos,size){
+  size=size||18; const big=size>=8; const rank=pyramidRank(lg);
+  if(rank>=1){ // zweite / dritte Liga
+    let isLast=false; for(const c in PYRAMID){ const a=PYRAMID[c]; if(a.indexOf(lg)===a.length-1) isLast=true; }
+    if(pos===1) return "🔼 Meister & Aufstieg!";
+    if(pos<=2) return "🔼 Direktaufstieg!";
+    if(big && pos===3) return "🎭 Relegation (Aufstiegs-Playoff)";
+    if(!isLast && pos>=size-(big?1:0)) return "🔽 Abstieg";
+    if(!isLast && big && pos===size-2) return "🎭 Relegation";
+    return "Mittelfeld";
+  }
+  if(pos===1) return "🏆 Meister";
+  if(pos<=4) return "Champions-League-Platz";
+  if(pos<=6) return "Europa-League-Platz";
+  if(pos>=size-(big?1:0)) return "🔽 Abstieg";
+  if(big && pos===size-2) return "🎭 Relegation";
+  return "Mittelfeld";
+}
+
+// Länder-Pyramiden (oben ↔ zweite Liga) für Auf-/Abstieg
+const PYRAMID = {
+  England:["Premier League","Championship"],
+  Deutschland:["Bundesliga","2. Bundesliga","3. Liga"],
+  Spanien:["La Liga","LaLiga 2"],
+  Italien:["Serie A","Serie B"],
+  Frankreich:["Ligue 1","Ligue 2"],
+  Niederlande:["Eredivisie","Eerste Divisie"],
+  Portugal:["Liga Portugal","Liga Portugal 2"],
+  Türkei:["Süper Lig","1. Lig"],
+  Schottland:["Scottish PL","Scottish Championship"],
+  Belgien:["Pro League","Challenger Pro League"]
+};
+// Rang einer Liga in ihrer Pyramide (0 = oberste); -1 = keine Pyramide
+function pyramidRank(lg){ for(const c in PYRAMID){ const idx=PYRAMID[c].indexOf(lg); if(idx>=0) return idx; } return -1; }
+
+// Passendes Länderturnier je nach Konföderation (Brasilien spielt keine EM!)
+function tournamentFor(nat,year){
+  const m=year%4;
+  if(m===2) return "Weltmeisterschaft";
+  if(m===1) return "WM-Qualifikation";
+  switch(nat.conf){
+    case "UEFA":     return m===0?"Europameisterschaft":"Nations League";
+    case "CONMEBOL": return "Copa América";
+    case "CAF":      return "Afrika-Cup";
+    case "AFC":      return "Asien-Cup";
+    case "CONCACAF": return "Gold Cup";
+    default:         return "Länderspiele";
+  }
+}
+
+// Europapokal je nach Klub-Stärke (Qualifikation über Level als Proxy)
+function euroCompetition(club){
+  const l=club.l;
+  if(l>=81) return {name:"Champions League", winCh:clamp((l-82)/55,0.03,0.30), idx:(l-79)/2.4};
+  if(l>=75) return {name:"Europa League",   winCh:clamp((l-76)/26,0.05,0.34), idx:(l-73)/2.2};
+  if(l>=69) return {name:"Conference League",winCh:clamp((l-70)/18,0.06,0.42), idx:(l-67)/2.0};
+  return null;
+}
+
+/* ---- Living World ---- */
+// Ballon-d'Or-Konkurrenten: starten als echte Stars, gehen mit der Zeit in Rente
+const REAL_RIVALS=[
+  {name:"Kylian Mbappé",star:93,club:"Real Madrid",age:26,nat:"Frankreich"},
+  {name:"Erling Haaland",star:92,club:"Manchester City",age:25,nat:"Norwegen"},
+  {name:"Vinícius Júnior",star:91,club:"Real Madrid",age:25,nat:"Brasilien"},
+  {name:"Jude Bellingham",star:90,club:"Real Madrid",age:22,nat:"England"},
+  {name:"Rodri",star:90,club:"Manchester City",age:29,nat:"Spanien"},
+  {name:"Harry Kane",star:90,club:"Bayern München",age:32,nat:"England"},
+  {name:"Mohamed Salah",star:89,club:"Liverpool",age:33,nat:"Ägypten"},
+  {name:"Lamine Yamal",star:89,club:"FC Barcelona",age:18,nat:"Spanien"},
+  {name:"Ousmane Dembélé",star:88,club:"Paris Saint-Germain",age:28,nat:"Frankreich"},
+  {name:"Florian Wirtz",star:88,club:"Liverpool",age:22,nat:"Deutschland"},
+  {name:"Jamal Musiala",star:88,club:"Bayern München",age:22,nat:"Deutschland"},
+  {name:"Bukayo Saka",star:88,club:"Arsenal",age:24,nat:"England"},
+  {name:"Lautaro Martínez",star:88,club:"Inter Mailand",age:28,nat:"Argentinien"},
+  {name:"Federico Valverde",star:88,club:"Real Madrid",age:27,nat:"Uruguay"},
+  {name:"Victor Osimhen",star:88,club:"Galatasaray",age:27,nat:"Nigeria"},
+  {name:"Phil Foden",star:87,club:"Manchester City",age:25,nat:"England"},
+  {name:"Pedri",star:87,club:"FC Barcelona",age:23,nat:"Spanien"},
+  {name:"Cole Palmer",star:87,club:"Chelsea",age:23,nat:"England"},
+  {name:"Michael Olise",star:86,club:"Bayern München",age:24,nat:"Frankreich"},
+  {name:"Achraf Hakimi",star:86,club:"Paris Saint-Germain",age:27,nat:"Marokko"}
+];
+const NG_FIRST=["Leo","Kai","Diego","Tom","Rafa","Mateo","Oscar","Noah","Emre","Samuel","Bruno","Luca","Finn","Hugo","Dario","Marco","Kenji","Pablo","Leon","Malik","Niko","Felix","Ivan","Andrés","Youssef","Gabriel","Enzo","Théo","Rayan","Junior"];
+const NG_LAST=["Moreno","Bergström","Fontana","Varga","Souza","Delgado","Lindqvist","Vermeer","Kaya","Okafor","Estévez","Bianchi","Andersen","Marchand","Kovač","Ricci","Sato","Herrera","Novak","Traoré","Roth","Braun","Petrov","Salgado","Costa","Diallo","Nakamura","Haddad","Lindgren","Boateng"];
+function makeNewgen(){
+  return {name:pick(NG_FIRST)+" "+pick(NG_LAST), star:rint(82,86), club:pick(CLUBS.filter(c=>c.l>=80).map(c=>c.n)), age:rint(18,20), retireAge:rint(35,38), nat:pick(NATIONS).name, real:false};
+}
+function initRivals(){
+  return REAL_RIVALS.map(r=>({name:r.name,star:r.star,club:r.club,age:r.age,nat:r.nat,retireAge:rint(35,38),real:true}));
+}
+// Ablösesumme (Mio.) je nach Stärke & Alter
+function transferFee(star,age){ let f=Math.pow(1.28, Math.max(0,star-80))*6; if(age>30) f*=0.35; else if(age>27) f*=0.6; else if(age>24) f*=0.9; else f*=1.2; return Math.round(f); }
+// Topstars wechseln parallel die Klubs; liefert die 3 teuersten Transfers
+function simTransfers(rivals){
+  const topClubs=CLUBS.filter(c=>c.l>=80).map(c=>c.n), moves=[], used=new Set(), n=Math.min(rivals.length, rint(3,6));
+  for(let k=0;k<n;k++){
+    let i,tr=0; do{ i=rint(0,rivals.length-1); tr++; }while(used.has(i)&&tr<8); if(used.has(i))continue; used.add(i);
+    const rv=rivals[i], from=rv.club; let to=pick(topClubs),t2=0; while(to===from&&t2<6){to=pick(topClubs);t2++;} if(to===from)continue;
+    moves.push({name:rv.name,from,to,fee:transferFee(rv.star,rv.age)}); rv.club=to;
+  }
+  return moves.sort((a,b)=>b.fee-a.fee).slice(0,3);
+}
+function initWorld(){
+  const clubs={};
+  CLUBS.forEach(c=>{ clubs[c.n]={name:c.n,league:c.lg,level:c.l,base:c.l,orig:c.l}; });
+  return {clubs, rivals:initRivals()};
+}
+// Simuliert eine komplette Saison in ALLEN Ligen; wendet Auf-/Abstieg an.
+function advanceWorld(world, playerClubName, playerBoost){
+  const byLeague={};
+  for(const name in world.clubs){ const c=world.clubs[name]; (byLeague[c.league]=byLeague[c.league]||[]).push(c); }
+  const tables={};
+  for(const lg in byLeague){
+    tables[lg]=byLeague[lg].map(c=>{
+      let s=c.level+gauss()*3.2+(c.name===playerClubName?(playerBoost||0):0);
+      return {name:c.name,level:Math.round(c.level),score:s};
+    }).sort((a,b)=>b.score-a.score).map((r,i)=>({name:r.name,level:r.level,pos:i+1}));
+  }
+  const events=[], playoffs=[];
+  const moveUp=(name,toLg)=>{ const c=world.clubs[name]; c.league=toLg; c.base=clamp(c.base+1.5,c.orig-5,c.orig+8); c.level=clamp(c.level+2,40,92); events.push({type:"up",name,league:toLg}); };
+  const moveDown=(name,toLg)=>{ const c=world.clubs[name]; c.league=toLg; c.base=clamp(c.base-1.5,c.orig-8,c.orig+5); c.level=clamp(c.level-2,40,92); events.push({type:"down",name,league:toLg}); };
+  for(const country in PYRAMID){
+    const tiers=PYRAMID[country];
+    for(let ti=0; ti<tiers.length-1; ti++){
+      const top=tiers[ti], second=tiers[ti+1];
+      const tt=tables[top], ts=tables[second];
+      if(!tt||!ts||tt.length<3||ts.length<2) continue;
+      const k=(tt.length>=8 && ts.length>=5)?2:1;   // große Ligen: 2 rauf/runter
+      for(let j=0;j<k;j++){ moveDown(tt[tt.length-1-j].name, second); moveUp(ts[j].name, top); }
+      // Relegations-Playoff: knapp-über-Abstieg vs knapp-unter-Aufstieg
+      if(k===2 && tt.length>=6 && ts.length>=4){
+        const topPO=tt[tt.length-1-k].name, secPO=ts[k].name;
+        const topWinP=clamp(0.5+(world.clubs[topPO].level-world.clubs[secPO].level)*0.04,0.2,0.82);
+        const topStays=R()<topWinP;
+        if(!topStays){ moveDown(topPO, second); moveUp(secPO, top); }
+        playoffs.push({top, second, topClub:topPO, secClub:secPO, topStays});
+      }
+    }
+  }
+  for(const name in world.clubs){ const c=world.clubs[name]; c.level=clamp(c.level+(c.base-c.level)*0.2+gauss()*0.5,40,93); }
+  return {tables,events,playoffs};
+}
+// Ligaphasen-Tabellen der Europapokale (CL/EL/CoL)
+function europeanTables(world, boostName, boostAmt){
+  const clubs=Object.values(world.clubs);
+  const bands={ "Champions League":[81,200], "Europa League":[75,81], "Conference League":[69,75] };
+  const out={};
+  for(const comp in bands){
+    const lo=bands[comp][0], hi=bands[comp][1];
+    const pool=clubs.filter(c=>c.level>=lo && c.level<hi).sort((a,b)=>b.level-a.level).slice(0,18);
+    out[comp]=pool.map(c=>({name:c.name,level:Math.round(c.level),score:c.level+gauss()*3.0+(c.name===boostName?(boostAmt||0):0)}))
+      .sort((a,b)=>b.score-a.score).map((r,i)=>({name:r.name,level:r.level,pos:i+1}));
+  }
+  return out;
+}
+
+/* ---- Speichern / Laden ---- */
+const SAVE_KEY="ssim3000_save_v1_slot";
+let _activeSlot=1;
+function slotKey(n){ return SAVE_KEY+(n||_activeSlot); }
+function saveGame(){ try{ if(!P) return; const s=Object.assign({},P); s.clubs=[...P.clubs]; localStorage.setItem(slotKey(),JSON.stringify(s)); }catch(e){} }
+function loadGame(n){ try{ const raw=localStorage.getItem(slotKey(n)); if(!raw) return null; const s=JSON.parse(raw); s.clubs=new Set(s.clubs||[]); return s; }catch(e){ return null; } }
+function peekSave(n){ try{ const raw=localStorage.getItem(slotKey(n)); return raw?JSON.parse(raw):null; }catch(e){ return null; } }
+function clearSave(n){ try{ localStorage.removeItem(slotKey(n)); }catch(e){} }
+
+/* ============================ AVATAR (SVG) ============================ */
+const SKINS=["#ffdbb4","#edb98a","#fd9841","#d08b5b","#ae5d29","#614335"];
+const HAIR_STYLES=[{k:"shortFlat",l:"Kurz"},{k:"shortRound",l:"Kurz rund"},{k:"shortWaved",l:"Wellig"},{k:"theCaesar",l:"Caesar"},{k:"shortCurly",l:"Kurz lockig"},{k:"fro",l:"Afro"},{k:"dreads01",l:"Dreads"},{k:"shavedSides",l:"Undercut"},{k:"straight01",l:"Lang glatt"},{k:"longButNotTooLong",l:"Halblang"},{k:"bun",l:"Man-Bun"},{k:"curly",l:"Lang lockig"},{k:"frizzle",l:"Frizzle"},{k:"none",l:"Glatze"}];
+const HAIR_COLORS=["#0e0e0e","#2c1b18","#4a312c","#724133","#a55728","#b58143","#d6b370","#e8e1e1","#c93305"];
+const FACES=[{k:"oval",l:"Oval"},{k:"rund",l:"Rund"},{k:"eckig",l:"Eckig"},{k:"lang",l:"Schmal"}];
+const BROWS=[{k:"normal",l:"Normal"},{k:"dick",l:"Dick"},{k:"duenn",l:"Dünn"}];
+const EYES=[{k:"normal",l:"Normal"},{k:"schmal",l:"Schmal"},{k:"gross",l:"Groß"}];
+const EYE_COLORS=["#5b3a1a","#8a5a2b","#3a6ea5","#4a7c4a","#6b6b6b"];
+const NOSES=[{k:"normal",l:"Normal"},{k:"breit",l:"Breit"},{k:"schmal",l:"Schmal"}];
+const BEARDS=[{k:"none",l:"Kein Bart"},{k:"beardLight",l:"Leicht"},{k:"beardMedium",l:"Mittel"},{k:"beardMajestic",l:"Voll"},{k:"moustacheFancy",l:"Schnauzer"},{k:"moustacheMagnum",l:"Schnauzer XL"}];
+const ACCS=[{k:"none",l:"Keins"},{k:"round",l:"Brille rund"},{k:"prescription02",l:"Brille"},{k:"sunglasses",l:"Sonnenbrille"},{k:"wayfarers",l:"Wayfarer"},{k:"eyepatch",l:"Augenklappe"}];
+const KITS=["#c0392b","#2563eb","#0ea5e9","#16a34a","#f59e0b","#7c3aed","#111827","#e5e7eb"];
+const DEFAULT_AV={skin:"#edb98a",hair:"shortFlat",hairColor:"#4a312c",beard:"none",acc:"none",kit:"#16a34a"};
+const MODES=[
+  {t:"From Zero to Hero",d:"Zufälliger kleiner Verein – der klassische Weg vom Niemand."},
+  {t:"Hohe Erwartungen",d:"Fußballer-Familie: besseres Talent, Start bei solidem Verein."},
+  {t:"Golden Feet",d:"Wunderkind ab 19 – immer der Beste der Akademie. Startverein frei wählbar."},
+  {t:"Street Footballer",d:"Rohes Straßen-Talent aus armer Familie: niedriger Start, RIESIGES Potenzial – du wirst gescoutet."}
+];
+// Schwierigkeitsgrade: Multiplikatoren auf Entwicklung, Verletzungen, Pech-Events, Klub-Interesse, Trainergunst
+const DIFFICULTIES=[
+  {t:"Anfänger",         d:"Einfach",               growth:1.40, injury:0.55, event:0.45, interest:1.50, coach:1.35, note:"Schnelle Entwicklung, wenig Pech, Klubs reißen sich um dich."},
+  {t:"Fortgeschrittener",d:"Mittel",                growth:1.12, injury:0.85, event:0.80, interest:1.15, coach:1.10, note:"Ausgewogen – der normale Weg."},
+  {t:"Profi",            d:"Schwer",                growth:0.90, injury:1.05, event:1.05, interest:0.85, coach:0.90, note:"Fordernd. Für erfahrene Spieler."},
+  {t:"Weltklasse",       d:"Mega Mega Mega Schwer", growth:0.68, injury:1.35, event:1.40, interest:0.55, coach:0.70, note:"Brutal. Nur die absolut Besten schaffen es nach oben."}
+];
+function DIFF(){ return DIFFICULTIES[(P&&P.diffLevel!=null)?P.diffLevel:1]; }
+function genGoldenOptions(){
+  const pool=CLUBS.filter(c=>c.l>=74).slice(); const opts=[]; const used=new Set();
+  while(opts.length<5 && pool.length){ const c=pick(pool); if(!used.has(c.n)){used.add(c.n);opts.push(c.n);} }
+  return opts;
+}
+let _auid=0;
+function faceDims(f){ return f==="rund"?[21,20.5]:f==="eckig"?[20,21.5]:f==="lang"?[17.5,23]:[19,22]; }
+function eyeShape(k,cx,cy,col){
+  if(k==="schmal") return `<ellipse cx="${cx}" cy="${cy}" rx="3.4" ry="1.6" fill="#fff"/><circle cx="${cx}" cy="${cy}" r="1.6" fill="${col}"/><circle cx="${cx}" cy="${cy}" r="0.8" fill="#111"/>`;
+  if(k==="gross") return `<ellipse cx="${cx}" cy="${cy}" rx="3.6" ry="3.1" fill="#fff"/><circle cx="${cx}" cy="${cy}" r="2.2" fill="${col}"/><circle cx="${cx}" cy="${cy}" r="1.1" fill="#111"/><circle cx="${cx-0.7}" cy="${cy-0.8}" r="0.5" fill="#fff"/>`;
+  return `<ellipse cx="${cx}" cy="${cy}" rx="3.1" ry="2.3" fill="#fff"/><circle cx="${cx}" cy="${cy}" r="1.85" fill="${col}"/><circle cx="${cx}" cy="${cy}" r="0.95" fill="#111"/><circle cx="${cx-0.6}" cy="${cy-0.7}" r="0.45" fill="#fff"/>`;
+}
+function hairSVG(a,HF,hc){
+  switch(a.hair){
+    case "glatze": return {back:"",front:""};
+    case "buzz": return {back:"",front:`<path d="M31 40 C31 23 42 20 50 20 C58 20 69 23 69 40 C69 33 60 30 50 30 C40 30 31 33 31 40 Z" fill="${HF}" opacity="0.82"/>`};
+    case "kurz": return {back:"",front:`<path d="M30 43 C29 22 42 17 50 17 C58 17 71 22 70 43 C65 31 58 28 50 28 C42 28 35 31 30 43 Z" fill="${HF}"/>`};
+    case "undercut": return {back:"",front:`<path d="M35 36 C35 20 44 17 50 17 C57 17 66 21 66 35 C61 27 56 25 50 25 C44 25 39 28 35 36 Z" fill="${HF}"/>`};
+    case "slick": return {back:"",front:`<path d="M31 40 C31 20 43 16 50 16 C57 16 70 20 69 39 C66 30 62 27 50 27 C41 27 35 30 31 40 Z" fill="${HF}"/><path d="M40 24 Q50 20 60 24" stroke="${shade(hc,22)}" stroke-width="1" fill="none" opacity="0.5"/>`};
+    case "lockig": return {back:"",front:`<g fill="${HF}"><circle cx="34" cy="30" r="9"/><circle cx="44" cy="24" r="10"/><circle cx="56" cy="24" r="10"/><circle cx="66" cy="30" r="9"/><circle cx="30" cy="38" r="6"/><circle cx="70" cy="38" r="6"/></g>`};
+    case "afro": return {back:`<g fill="${HF}"><circle cx="34" cy="30" r="13"/><circle cx="47" cy="21" r="14"/><circle cx="60" cy="23" r="13"/><circle cx="68" cy="33" r="11"/><circle cx="28" cy="41" r="8"/><circle cx="72" cy="41" r="8"/></g>`,front:""};
+    case "dreads": return {back:`<g fill="${HF}">${[26,34,42,58,66,74].map((x,i)=>`<rect x="${x-2.3}" y="18" width="4.6" height="${42+(i%3)*7}" rx="2.3"/>`).join("")}</g>`,front:`<path d="M30 40 C30 21 42 17 50 17 C58 17 70 21 70 40 C65 30 58 27 50 27 C42 27 35 30 30 40 Z" fill="${HF}"/>`};
+    case "iro": return {back:"",front:`<path d="M45 14 C48 11 52 11 55 14 L57 34 C54 30 46 30 43 34 Z" fill="${HF}"/>`};
+    case "lang": return {back:`<path d="M27 44 C24 22 42 15 50 15 C58 15 76 22 73 44 L74 80 C74 60 69 54 66 51 C67 38 60 28 50 28 C40 28 33 38 34 51 C31 54 26 60 26 80 Z" fill="${HF}"/>`,front:`<path d="M31 40 C31 22 42 18 50 18 C58 18 69 22 69 40 C64 30 58 28 50 28 C42 28 36 30 31 40 Z" fill="${HF}"/>`};
+    case "bun": return {back:`<circle cx="50" cy="19" r="7" fill="${HF}"/>`,front:`<path d="M31 40 C31 21 42 17 50 17 C58 17 69 21 69 40 C64 29 58 26 50 26 C42 26 36 29 31 40 Z" fill="${HF}"/>`};
+    default: return {back:"",front:`<path d="M30 43 C29 22 42 17 50 17 C58 17 71 22 70 43 C65 31 58 28 50 28 C42 28 35 31 30 43 Z" fill="${HF}"/>`};
+  }
+}
+function beardSVG(a,cx,cy,rx,ry,col){
+  const b=a.beard; if(b==="keiner") return "";
+  if(b==="stoppel") return `<path d="M${cx-rx+3} ${cy+5} Q${cx} ${cy+ry+3} ${cx+rx-3} ${cy+5} L${cx+rx-4} ${cy+ry-9} Q${cx} ${cy+ry+1} ${cx-rx+4} ${cy+ry-9} Z" fill="${col}" opacity="0.3"/>`;
+  if(b==="schnauzer") return `<path d="M${cx-5} ${cy+7.5} Q${cx} ${cy+6.5} ${cx+5} ${cy+7.5} Q${cx} ${cy+10.5} ${cx-5} ${cy+7.5} Z" fill="${col}"/>`;
+  if(b==="ziege") return `<path d="M${cx-4.5} ${cy+7.5} Q${cx} ${cy+6.5} ${cx+4.5} ${cy+7.5} Q${cx} ${cy+10} ${cx-4.5} ${cy+7.5} Z" fill="${col}"/><path d="M${cx-3.5} ${cy+12} Q${cx} ${cy+19} ${cx+3.5} ${cy+12} Q${cx} ${cy+15} ${cx-3.5} ${cy+12} Z" fill="${col}"/>`;
+  if(b==="voll") return `<path d="M${cx-rx+2} ${cy+2} Q${cx-rx+1} ${cy+ry} ${cx} ${cy+ry+4} Q${cx+rx-1} ${cy+ry} ${cx+rx-2} ${cy+2} Q${cx+rx-5} ${cy+9} ${cx} ${cy+9} Q${cx-rx+5} ${cy+9} ${cx-rx+2} ${cy+2} Z" fill="${col}"/><path d="M${cx-5} ${cy+7.5} Q${cx} ${cy+6.5} ${cx+5} ${cy+7.5} Q${cx} ${cy+10} ${cx-5} ${cy+7.5} Z" fill="${col}"/>`;
+  if(b==="lang") return `<path d="M${cx-rx+2} ${cy+2} Q${cx-rx+1} ${cy+ry} ${cx-4} ${cy+ry+9} Q${cx} ${cy+ry+17} ${cx+4} ${cy+ry+9} Q${cx+rx-1} ${cy+ry} ${cx+rx-2} ${cy+2} Q${cx+rx-5} ${cy+9} ${cx} ${cy+9} Q${cx-rx+5} ${cy+9} ${cx-rx+2} ${cy+2} Z" fill="${col}"/>`;
+  return "";
+}
+function accSVG(a){
+  if(a.acc==="stirnband") return `<path d="M30 33 Q50 28 70 33 L70 38 Q50 33 30 38 Z" fill="#e23b3b"/><path d="M30 33 Q50 28 70 33" stroke="#ffffff55" stroke-width="0.6" fill="none"/>`;
+  if(a.acc==="ohrring") return `<circle cx="30.5" cy="52" r="1.7" fill="#ffd257"/>`;
+  return "";
+}
+function avatarSVG(a0,size){
+  a0=Object.assign({},DEFAULT_AV,a0||{}); size=size||100; const id=++_auid;
+  const skin=a0.skin, hc=a0.hairColor, kit=a0.kit;
+  const skinL=shade(skin,14), skinS=shade(skin,-30), hcL=shade(hc,24), hcD=shade(hc,-30), kitD=shade(kit,-34), kitL=shade(kit,20);
+  const HF="url(#hr"+id+")";
+  const d=faceDims(a0.face), rx=d[0], ry=d[1], cx=50, cy=45, eyeY=cy-1, eL=cx-7.3, eR=cx+7.3;
+  const browCol=shade(hc,-8), bw=a0.brows==="dick"?2.6:a0.brows==="duenn"?1.2:1.8;
+  const brow=x=>`<rect x="${x-4}" y="${eyeY-5.4}" width="8" height="${bw}" rx="${bw/2}" fill="${browCol}" transform="rotate(${x<cx?-5:5} ${x} ${eyeY-5})"/>`;
+  const nw=a0.nose==="breit"?4:a0.nose==="schmal"?2:3;
+  const nose=`<path d="M${cx} ${cy-0.5} Q${cx-nw} ${cy+5} ${cx-1} ${cy+6} Q${cx} ${cy+6.6} ${cx+1} ${cy+6} Q${cx+nw} ${cy+5} ${cx} ${cy-0.5}" fill="${skinS}" opacity="0.5"/>`;
+  const mouth=`<path d="M${cx-4} ${cy+11} Q${cx} ${cy+13.4} ${cx+4} ${cy+11}" stroke="${shade(skin,-48)}" stroke-width="1.4" fill="none" stroke-linecap="round"/>`;
+  const hair=hairSVG(a0,HF,hc), beard=beardSVG(a0,cx,cy,rx,ry,hc), acc=accSVG(a0);
+  return `<svg viewBox="0 0 100 100" width="${size}" height="${size}" style="display:block">
+    <defs>
+      <radialGradient id="sk${id}" cx="50%" cy="38%" r="66%"><stop offset="0" stop-color="${skinL}"/><stop offset="1" stop-color="${skin}"/></radialGradient>
+      <linearGradient id="bg${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${kitL}"/><stop offset="1" stop-color="${kit}"/></linearGradient>
+      <linearGradient id="hr${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${hcL}"/><stop offset="1" stop-color="${hcD}"/></linearGradient>
+      <clipPath id="cc${id}"><circle cx="50" cy="50" r="50"/></clipPath>
+    </defs>
+    <g clip-path="url(#cc${id})">
+      <rect width="100" height="100" fill="url(#bg${id})"/>
+      <path d="M8 100 Q14 74 50 71 Q86 74 92 100 Z" fill="${kitD}"/>
+      <path d="M50 71 L44 88 L50 93 L56 88 Z" fill="${kitL}" opacity="0.6"/>
+      <path d="M${cx-6} 63 h12 v11 h-12 Z" fill="${skinS}"/>
+      ${hair.back}
+      <ellipse cx="${cx-rx}" cy="${cy+3}" rx="3.6" ry="4.6" fill="url(#sk${id})"/><ellipse cx="${cx+rx}" cy="${cy+3}" rx="3.6" ry="4.6" fill="url(#sk${id})"/>
+      <ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="url(#sk${id})"/>
+      ${eyeShape(a0.eyes,eL,eyeY,a0.eyeColor)}${eyeShape(a0.eyes,eR,eyeY,a0.eyeColor)}
+      ${brow(eL)}${brow(eR)}
+      ${nose}
+      ${beard}
+      ${mouth}
+      ${hair.front}
+      ${acc}
+    </g>
+    <circle cx="50" cy="50" r="49" fill="none" stroke="#ffffff26" stroke-width="2"/>
+  </svg>`;
+}
+
+/* ---- Vorgenerierte Avatar-Teile (optional, aus avatar/parts.json) ---- */
+// DiceBear-Avatar (offline, aus dicebear.bundle.js) – Teile passen immer zusammen
+function avatarComposite(av,size){
+  av=av||DEFAULT_AV; size=size||100;
+  const strip=h=>(h||'').replace('#','');
+  let svg='';
+  if(typeof window!=='undefined' && window.diceAvatar){
+    svg=window.diceAvatar({ seed:'ssim', skin:strip(av.skin)||'edb98a', hair:av.hair||'shortFlat', hairColor:strip(av.hairColor)||'4a312c', beard:av.beard||'none', acc:av.acc||'none', kit:strip(av.kit)||'1a9f5a' });
+  }
+  return `<div class="dbav" style="width:${size}px;height:${size}px;background:${av.kit||'#16a34a'}22">${svg}</div>`;
+}
+
+/* ============================ VEREINS-WAPPEN (SVG) ============================ */
+function hashStr(s){let h=0;for(let i=0;i<s.length;i++){h=(h*31+s.charCodeAt(i))>>>0;}return h;}
+const BADGE_COLORS=[["#c0392b","#7b1f16"],["#1e56b0","#0e2f6b"],["#0e7a5f","#064236"],["#8e44ad","#4a1f63"],["#d68910","#8a5406"],["#2c3e50","#151f28"],["#16a085","#0b5e4b"],["#b03a2e","#6e211a"],["#2471a3","#123c58"],["#7d3c98","#43204f"],["#c0a000","#7a6600"],["#5d6d7e","#333d47"]];
+// Echte Vereinsfarben (Farben sind nicht geschützt) – macht die Wappen erkennbar
+const CLUB_COLORS={
+  "Bayern München":"#dc052d","Borussia Dortmund":"#fde100","RB Leipzig":"#dd0741","Bayer Leverkusen":"#e32219",
+  "VfB Stuttgart":"#e30613","Eintracht Frankfurt":"#e1000f","Werder Bremen":"#1d9053","SC Freiburg":"#e2001a",
+  "VfL Wolfsburg":"#65b32e","Bor. Mönchengladbach":"#00a94d","Schalke 04":"#004d9d","Hamburger SV":"#0a3b7c",
+  "Hertha BSC":"#004b9e","1. FC Kaiserslautern":"#c8102e","Fortuna Düsseldorf":"#d5122a","Dynamo Dresden":"#e2001a",
+  "Real Madrid":"#c8a24b","FC Barcelona":"#a50044","Atlético Madrid":"#cb3524","Athletic Bilbao":"#ee2523",
+  "FC Sevilla":"#d81a20","FC Valencia":"#f18e00","Villarreal":"#ffd400","Real Betis":"#00954c","Girona FC":"#d40b26",
+  "Manchester City":"#6cabdd","Manchester United":"#da291c","Liverpool":"#c8102e","Arsenal":"#ef0107",
+  "Chelsea":"#034694","Tottenham Hotspur":"#132257","Newcastle United":"#111111","Aston Villa":"#7a003c",
+  "Everton":"#003399","Leicester City":"#003090","West Ham United":"#7a263a","AFC Bournemouth":"#da291c",
+  "Juventus Turin":"#111111","Inter Mailand":"#0068a8","AC Mailand":"#fb090b","SSC Neapel":"#12a0d7",
+  "AS Rom":"#8e1116","Lazio Rom":"#87d8f7","Atalanta Bergamo":"#1d1d1b","AC Florenz":"#59277f",
+  "Paris Saint-Germain":"#004170","AS Monaco":"#e51b22","Olympique Marseille":"#2faee0","Olympique Lyon":"#14387f","OSC Lille":"#e01e13",
+  "Ajax Amsterdam":"#d2122e","PSV Eindhoven":"#ed1c24","Feyenoord":"#cc0000",
+  "Benfica Lissabon":"#e40521","FC Porto":"#00428c","Sporting Lissabon":"#008057",
+  "Galatasaray":"#fdb912","Fenerbahçe":"#ffed00","Beşiktaş":"#111111","Trabzonspor":"#7b1a2b",
+  "Celtic Glasgow":"#018749","Rangers FC":"#1b458f","FC Brügge":"#0d5eaf","RSC Anderlecht":"#59267f"
+};
+function lum(hex){const c=hex.replace('#','');return 0.299*parseInt(c.slice(0,2),16)+0.587*parseInt(c.slice(2,4),16)+0.114*parseInt(c.slice(4,6),16);}
+function clubInitials(name){
+  const skip=/^(FC|SV|AC|AS|SC|RC|SS|SSC|US|VfB|VfL|TSG|RB|OGC|CA|CF|OSC|1\.)$/i;
+  const words=name.split(/\s+/).filter(w=>!skip.test(w)&&!/^\d/.test(w));
+  const base=words.length?words:name.split(/\s+/);
+  let ini=base.slice(0,2).map(w=>w[0]).join('');
+  if(ini.length<2){ const letters=name.replace(/[^A-Za-zÀ-ÿ]/g,''); ini=letters.slice(0,2); }
+  return ini.toUpperCase();
+}
+function clubBadge(name,size){
+  size=size||28; const h=hashStr(name);
+  let c1,c2;
+  if(CLUB_COLORS[name]){ c1=CLUB_COLORS[name]; c2=shade(c1,-46); }
+  else { const col=BADGE_COLORS[h%BADGE_COLORS.length]; c1=col[0]; c2=col[1]; }
+  const light=lum(c1)>150; const txt=light?"#161616":"#ffffff"; const line=light?"#00000026":"#ffffff2e";
+  const ini=clubInitials(name); const id=++_auid; const stripe=(h>>3)%3;
+  return `<svg viewBox="0 0 40 44" width="${size}" height="${Math.round(size*44/40)}" style="display:block;flex:none">
+    <defs><linearGradient id="bd${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${c1}"/><stop offset="1" stop-color="${c2}"/></linearGradient></defs>
+    <path d="M20 1.5 L37 6 V22 C37 33 29.5 39.5 20 42.5 C10.5 39.5 3 33 3 22 V6 Z" fill="url(#bd${id})" stroke="#ffffff66" stroke-width="1.3"/>
+    ${stripe===0?`<path d="M14 2.6 V41 M26 2.6 V41" stroke="${line}" stroke-width="3"/>`:stripe===1?`<path d="M3 15 H37" stroke="${line}" stroke-width="2"/>`:`<circle cx="20" cy="20" r="9" fill="none" stroke="${line}" stroke-width="2"/>`}
+    <text x="20" y="26" text-anchor="middle" font-size="13" font-weight="800" fill="${txt}" font-family="-apple-system,Arial">${ini}</text>
+  </svg>`;
+}
+
+/* ---- Gegner & Ergebnisse in K.o.-Runden ---- */
+function sameCountryLeagues(lg){ for(const c in PYRAMID){ if(PYRAMID[c].includes(lg)) return PYRAMID[c]; } return [lg]; }
+function pickOpponentClub(myName,minLevel,leagues){
+  const inLg=c=>!leagues||leagues.includes(c.league);
+  let pool=Object.values(P.world.clubs).filter(c=>c.name!==myName && c.level>=minLevel && inLg(c));
+  if(!pool.length) pool=Object.values(P.world.clubs).filter(c=>c.name!==myName && inLg(c));
+  if(!pool.length) pool=Object.values(P.world.clubs).filter(c=>c.name!==myName);
+  return pick(pool).name;
+}
+function pickOpponentNation(myNat, conf){
+  const base=NATIONS.filter(n=>n.name!==myNat && (!conf||n.conf===conf));
+  const pool=base.length?base:NATIONS.filter(n=>n.name!==myNat);
+  const strong=pool.filter(n=>n.thr>=80);
+  return pick(strong.concat(pool)).name;
+}
+function loseScore(){ const a=rint(0,2); return a+":"+(a+rint(1,2)); }
+function winScore(){ const a=rint(1,3); return a+":"+rint(0,a-1); }
+function compResult(rounds,won,idx,kind,myName,league){
+  const cupLgs = kind==="cup"?sameCountryLeagues(league):null;
+  const opp = won
+    ? (kind==="nt"?pickOpponentNation(myName):pickOpponentClub(myName, kind==="cup"?60:79, cupLgs))
+    : (kind==="nt"?pickOpponentNation(myName):pickOpponentClub(myName, kind==="cup"?55:74+idx*2, cupLgs));
+  if(won) return `${rounds[rounds.length-1]} · Finale ${winScore()} gegen ${opp}`;
+  if(idx<=0) return rounds[0];
+  return `${rounds[idx]} – ${loseScore()} gegen ${opp}`;
+}
+
+// Baut Gruppe + K.o.-Pfad für ein Länderturnier
+function buildBracket(nat, tour, exitIdx, won, rounds){
+  const worldwide = tour==="Weltmeisterschaft";
+  const confPool=NATIONS.filter(n=>n.name!==nat.name && (worldwide||n.conf===nat.conf));
+  const pool=confPool.length>=3?confPool:NATIONS.filter(n=>n.name!==nat.name);
+  const opps=[]; const used=new Set([nat.name]);
+  while(opps.length<3){ const c=pick(pool); if(!used.has(c.name)){ used.add(c.name); opps.push(c); } }
+  const advanced = exitIdx>=1 || won;
+  const teams=[{name:nat.name,isMe:true,pts: advanced?(6+rint(1,3)):rint(1,4)}]
+    .concat(opps.map(o=>({name:o.name,isMe:false,pts:rint(2,7)})));
+  teams.sort((a,b)=>b.pts-a.pts);
+  const ko=[];
+  if(advanced){
+    const maxI = won?rounds.length-1:exitIdx;
+    for(let i=1;i<=maxI;i++){
+      const rn=rounds[i]; if(!rn || rn.indexOf("Sieger")>=0) break;
+      const isExit=!won && i===exitIdx; const w=!isExit;
+      ko.push({round:rn, opp:pickOpponentNation(nat.name, worldwide?null:nat.conf), score:w?winScore():loseScore(), won:w});
+    }
+  }
+  return {tour, nat:nat.name, teams, advanced, ko, won, exitLabel: won?"Sieger 🏆":rounds[exitIdx]};
+}
+
+// Stern-Spieler einer Nation (aus dem Rivalen-Pool) – so tauchen Newgens in „ihren" Nationalteams auf
+function starOf(natName){ const rv=(P.world.rivals||[]).filter(r=>r.nat===natName).sort((a,b)=>b.star-a.star)[0]; return rv?rv.name:null; }
+// 16 Teilnehmer: Konföderation zuerst, dann Gaststarter – jede Nation nur einmal
+function tournamentTeams(nat, tour, n){
+  const worldwide = tour==="Weltmeisterschaft";
+  let pool=NATIONS.filter(x=>x.name!==nat.name && (worldwide||x.conf===nat.conf));
+  if(pool.length<n-1) pool=pool.concat(NATIONS.filter(x=>x.name!==nat.name && x.conf!==nat.conf));
+  const seen=new Set(); pool=pool.filter(x=>!seen.has(x.name)&&seen.add(x.name));
+  pool.sort((a,b)=>b.thr-a.thr);
+  const cand=pool.slice(0, Math.min(pool.length, (n-1)+8)), chosen=[];
+  while(chosen.length<n-1 && cand.length){ chosen.push(cand.splice(Math.floor(R()*cand.length),1)[0]); }
+  const rest=chosen.map(c=>({name:c.name,thr:c.thr}));
+  for(let i=rest.length-1;i>0;i--){ const j=Math.floor(R()*(i+1)); const t=rest[i];rest[i]=rest[j];rest[j]=t; }
+  return [{name:nat.name,thr:nat.thr}].concat(rest);
+}
+function koScore(winA){ if(winA){ const a=rint(1,3); return [a,rint(0,a-1)]; } const b=rint(1,3); return [rint(0,b-1),b]; }
+// Voller 16er-K.o.-Baum, alle Paarungen; Spieler-Pfad erzwungen bis zur Ausscheide-Runde
+function buildKnockout16(nat, tour, exitIdx, won){
+  const roundNames=["Achtelfinale","Viertelfinale","Halbfinale","Finale"];
+  let slots=tournamentTeams(nat, tour, 16);
+  const rounds=[];
+  for(let r=0;r<4 && slots.length>1;r++){
+    const matches=[], next=[];
+    for(let i=0;i<slots.length;i+=2){
+      const A=slots[i], B=slots[i+1], aMe=A.name===nat.name, bMe=B.name===nat.name;
+      let winA;
+      if(aMe||bMe){ const adv = won ? true : (r<exitIdx); winA = aMe?adv:!adv; }
+      else winA = R()<clamp(0.5+(A.thr-B.thr)*0.03,0.12,0.88);
+      const sc=koScore(winA);
+      matches.push({a:A.name,b:B.name,sa:sc[0],sb:sc[1],w:(winA?A:B).name,aMe,bMe});
+      next.push(winA?A:B);
+    }
+    rounds.push({name:roundNames[r],matches});
+    slots=next;
+  }
+  return {tour, nat:nat.name, rounds, champion:slots[0]?slots[0].name:null, won};
+}
+
+/* ============================ STATE ============================ */
+let P=null;
+const app=document.getElementById('app');
+let draft={name:"",age:17,nat:NATIONS[5].name,pos:"ST",style:0,av:Object.assign({},DEFAULT_AV),mode:0,goldenOptions:null,startClubName:null,jerseyName:"",number:0,foot:"Rechts",pos2:""};
+function suggestNumber(pos){ return {TW:1,IV:4,LV:3,RV:2,DM:6,ZM:8,LM:11,RM:7,OM:10,LF:11,RF:7,ST:9}[pos]||10; }
+
+/* ============================ CREATION ============================ */
+function renderCreation(){
+  const areas=["Tor","Abwehr","Mittelfeld","Angriff"];
+  const posHTML=areas.map(ar=>{
+    const chips=POSITIONS.filter(p=>p.area===ar).map(p=>`<div class="poschip ${draft.pos===p.code?'sel':''}" data-pos="${p.code}"><b>${p.code}</b><small>${p.label}</small></div>`).join("");
+    return `<div class="arealbl">${ar}</div><div class="posgrid">${chips}</div>`;
+  }).join("");
+  const styles=PLAYSTYLES[draft.pos];
+  const styleButtons=styles.map((s,i)=>`<div class="opt ${draft.style===i?'sel':''}" data-style="${i}">${s.n}<small>${s.d}${s.insp?` · à la ${s.insp}`:''}</small></div>`).join("");
+  const natOpts=NATIONS.map(n=>`<option value="${n.name}" ${draft.nat===n.name?'selected':''}>${n.name} · Nationalelf ab OVR ${n.thr}</option>`).join("");
+
+  const skinSw=SKINS.map(c=>`<span class="sw ${draft.av.skin===c?'sel':''}" data-skin="${c}" style="background:${c}"></span>`).join("");
+  const hairBtns=HAIR_STYLES.map(h=>`<span class="hchip ${draft.av.hair===h.k?'sel':''}" data-hair="${h.k}">${h.l}</span>`).join("");
+  const hcSw=HAIR_COLORS.map(c=>`<span class="sw ${draft.av.hairColor===c?'sel':''}" data-hc="${c}" style="background:${c}"></span>`).join("");
+  const kitSw=KITS.map(c=>`<span class="sw ${draft.av.kit===c?'sel':''}" data-kit="${c}" style="background:${c}"></span>`).join("");
+  const beardBtns=BEARDS.map(b=>`<span class="hchip ${draft.av.beard===b.k?'sel':''}" data-beard="${b.k}">${b.l}</span>`).join("");
+  const accBtns=ACCS.map(a=>`<span class="hchip ${draft.av.acc===a.k?'sel':''}" data-acc="${a.k}">${a.l}</span>`).join("");
+
+  const slotData=[1,2,3].map(n=>({n, sv:peekSave(n)}));
+  const firstEmpty=(slotData.find(s=>!s.sv)||{n:1}).n;
+  if(slotData.find(s=>s.n===_activeSlot && s.sv)) _activeSlot=firstEmpty;
+  const resumeCard=`<div class="card"><h2>💾 Speicherstände</h2>${slotData.map(s=>{
+    if(s.sv) return `<div class="offer"><div class="info"><b>Slot ${s.n}: ${s.sv.name}</b><small>${(posOf(s.sv.pos)||{}).label||s.sv.pos} · ${s.sv.age}J · OVR ${s.sv.ovr} · ${s.sv.club?s.sv.club.n:''} · ${s.sv.year}</small></div><button data-resume="${s.n}">Fortsetzen</button><button data-del="${s.n}" style="background:var(--bad);color:#fff;margin-left:6px;padding:9px 12px;border:none;border-radius:10px;cursor:pointer">🗑</button></div>`;
+    return `<div class="offer" data-newslot="${s.n}" style="cursor:pointer;opacity:${_activeSlot===s.n?1:.6}"><div class="info"><b>Slot ${s.n}: leer</b><small>${_activeSlot===s.n?'✓ neue Karriere landet hier':'antippen zum Wählen'}</small></div>${_activeSlot===s.n?'<span class="lvlpill" style="background:var(--acc);color:#04240f">gewählt</span>':''}</div>`;
+  }).join("")}</div>`;
+
+  const modeCards=MODES.map((m,i)=>`<div class="opt ${draft.mode===i?'sel':''}" data-mode="${i}">${m.t}<small>${m.d}</small></div>`).join("");
+  const goldenSection = draft.mode===2?`
+    <label>Startverein frei wählen</label>
+    <div id="goldenopts">${(draft.goldenOptions||[]).map(n=>{const c=CLUBS.find(x=>x.n===n);const sel=draft.startClubName===n;return `<div class="offer" data-golden="${n}" style="cursor:pointer;margin-top:8px;${sel?'border-color:var(--acc);box-shadow:0 0 0 1px var(--acc) inset':''}"><div style="flex:none">${clubBadge(n,32)}</div><div class="info"><b>${n}</b><small>Level ${c.l} · ${c.lg}</small></div>${sel?'<span style="color:var(--acc);font-weight:800;flex:none">✓</span>':''}</div>`;}).join("")}</div>`:'';
+
+  app.innerHTML=resumeCard+`
+  <div class="card">
+    <h2>Erstelle deinen Profi</h2>
+    <p class="hint">Position und Spielstil sind die wichtigsten Entscheidungen – sie bestimmen, an welchen Zahlen du ein Leben lang gemessen wirst.</p>
+
+    <label>Karriere-Start</label>
+    <div class="opts" id="modeopts">${modeCards}</div>
+    ${goldenSection}
+
+    <label>Name</label>
+    <input id="f-name" type="text" placeholder="z.B. Leo Sturm" value="${draft.name}">
+
+    <div class="row">
+      <div>
+        <label>Trikotname</label>
+        <input id="f-jersey" type="text" placeholder="${((draft.name||'').trim().split(/\s+/).pop()||'STURM').toUpperCase()}" value="${draft.jerseyName}">
+      </div>
+      <div>
+        <label>Rückennummer</label>
+        <input id="f-number" type="number" min="1" max="99" value="${draft.number||suggestNumber(draft.pos)}">
+      </div>
+    </div>
+    <label>Starker Fuß</label>
+    <div style="display:flex;gap:6px" id="footopts">
+      <span class="hchip ${draft.foot==='Rechts'?'sel':''}" data-foot="Rechts">Rechts</span>
+      <span class="hchip ${draft.foot==='Links'?'sel':''}" data-foot="Links">Links</span>
+      <span class="hchip ${draft.foot==='Beidfüßig'?'sel':''}" data-foot="Beidfüßig">Beidfüßig</span>
+    </div>
+
+    <div class="row">
+      <div>
+        <label>Startalter: <span id="agev">${draft.age}</span></label>
+        <input id="f-age" type="range" min="${draft.mode===2?19:16}" max="23" value="${draft.age}" style="width:100%">
+        <div class="halfopen" style="text-align:left">Jung = kleiner Start-OVR, langer Bogen. Älter = stärker, kürzeres Fenster.</div>
+      </div>
+      <div>
+        <label>Nationalität</label>
+        <select id="f-nat">${natOpts}</select>
+        <div class="halfopen" style="text-align:left">Kleine Nation = leichter in die Nationalelf.</div>
+      </div>
+    </div>
+
+    <label>Position</label>
+    <div id="posopts">${posHTML}</div>
+
+    <label>Nebenposition (optional)</label>
+    <select id="f-pos2">
+      <option value="" ${!draft.pos2?'selected':''}>Keine</option>
+      ${POSITIONS.filter(p=>p.code!==draft.pos).map(p=>`<option value="${p.code}" ${draft.pos2===p.code?'selected':''}>${p.code} · ${p.label}</option>`).join("")}
+    </select>
+
+    <label>Spielstil (${posOf(draft.pos).label})</label>
+    <div class="opts" id="styleopts">${styleButtons}</div>
+
+    <label>Avatar</label>
+    <div class="avwrap">
+      <div class="avprev" id="avprev">${avatarComposite(draft.av,104)}</div>
+      <div class="avctrl">
+        <div class="avrow"><span class="cap">Hautton</span><div id="skinrow" style="display:flex;gap:6px">${skinSw}</div></div>
+        <div class="avrow"><span class="cap">Frisur</span><div id="hairrow" style="display:flex;gap:6px;flex-wrap:wrap">${hairBtns}</div></div>
+        <div class="avrow"><span class="cap">Haarfarbe</span><div id="hcrow" style="display:flex;gap:6px">${hcSw}</div></div>
+        <div class="avrow"><span class="cap">Bart</span><div id="beardrow" style="display:flex;gap:6px;flex-wrap:wrap">${beardBtns}</div></div>
+        <div class="avrow"><span class="cap">Brille</span><div id="accrow" style="display:flex;gap:6px;flex-wrap:wrap">${accBtns}</div></div>
+        <div class="avrow"><span class="cap">Trikot</span><div id="kitrow" style="display:flex;gap:6px;flex-wrap:wrap">${kitSw}</div></div>
+      </div>
+    </div>
+
+    <button class="primary" id="start">Karriere starten ⚽</button>
+  </div>`;
+
+  document.getElementById('f-name').oninput=e=>draft.name=e.target.value;
+  document.getElementById('f-jersey').oninput=e=>draft.jerseyName=e.target.value;
+  document.getElementById('f-number').oninput=e=>draft.number=clamp(+e.target.value||0,1,99);
+  document.getElementById('footopts').onclick=e=>{const b=e.target.closest('[data-foot]');if(!b)return;draft.foot=b.dataset.foot;renderCreation();};
+  document.getElementById('f-pos2').onchange=e=>draft.pos2=e.target.value;
+  document.getElementById('f-age').oninput=e=>{draft.age=+e.target.value;document.getElementById('agev').textContent=draft.age;};
+  document.getElementById('f-nat').onchange=e=>draft.nat=e.target.value;
+  document.getElementById('modeopts').onclick=e=>{const b=e.target.closest('[data-mode]');if(!b)return;draft.mode=+b.dataset.mode;if(draft.mode===2){if(!draft.goldenOptions)draft.goldenOptions=genGoldenOptions();if(!draft.startClubName)draft.startClubName=draft.goldenOptions[0];if(draft.age<19)draft.age=19;}renderCreation();};
+  const gopts=document.getElementById('goldenopts'); if(gopts) gopts.onclick=e=>{const b=e.target.closest('[data-golden]');if(!b)return;draft.startClubName=b.dataset.golden;renderCreation();};
+  document.getElementById('posopts').onclick=e=>{const b=e.target.closest('[data-pos]');if(!b)return;draft.pos=b.dataset.pos;draft.style=0;if(draft.pos2===draft.pos)draft.pos2="";renderCreation();};
+  document.getElementById('styleopts').onclick=e=>{const b=e.target.closest('[data-style]');if(!b)return;draft.style=+b.dataset.style;renderCreation();};
+  const upAv=(k,v)=>{draft.av[k]=v;renderCreation();};
+  document.getElementById('skinrow').onclick=e=>{const b=e.target.closest('[data-skin]');if(b)upAv('skin',b.dataset.skin);};
+  document.getElementById('hairrow').onclick=e=>{const b=e.target.closest('[data-hair]');if(b)upAv('hair',b.dataset.hair);};
+  document.getElementById('hcrow').onclick=e=>{const b=e.target.closest('[data-hc]');if(b)upAv('hairColor',b.dataset.hc);};
+  document.getElementById('kitrow').onclick=e=>{const b=e.target.closest('[data-kit]');if(b)upAv('kit',b.dataset.kit);};
+  document.getElementById('beardrow').onclick=e=>{const b=e.target.closest('[data-beard]');if(b)upAv('beard',b.dataset.beard);};
+  document.getElementById('accrow').onclick=e=>{const b=e.target.closest('[data-acc]');if(b)upAv('acc',b.dataset.acc);};
+  document.getElementById('start').onclick=renderDifficulty;
+  document.querySelectorAll('[data-resume]').forEach(b=>b.onclick=()=>{ _activeSlot=+b.dataset.resume; const g=loadGame(_activeSlot); if(g){ P=g; renderHub(); } });
+  document.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{ clearSave(+b.dataset.del); renderCreation(); });
+  document.querySelectorAll('[data-newslot]').forEach(b=>b.onclick=()=>{ _activeSlot=+b.dataset.newslot; renderCreation(); });
+}
+
+function renderDifficulty(){
+  app.innerHTML=`
+    <div class="card">
+      <h2>⚙️ Schwierigkeitsgrad</h2>
+      <p class="hint">Bestimmt, wie hart der Weg nach oben wird – Entwicklung, Verletzungen, Pech und wie oft Klubs anklopfen. In der laufenden Karriere nicht änderbar.</p>
+      <div class="opts" id="diffopts">${DIFFICULTIES.map((d,i)=>`<div class="opt" data-diff="${i}" style="min-width:100%">${d.t} · <b style="color:${i===0?'var(--acc)':i===3?'var(--bad)':'var(--warn)'}">${d.d}</b><small>${d.note}</small></div>`).join("")}</div>
+    </div>
+    <button class="ghost" id="diffback">← Zurück zur Erstellung</button>`;
+  document.getElementById('diffopts').onclick=e=>{const b=e.target.closest('[data-diff]');if(!b)return;startCareer(+b.dataset.diff);};
+  document.getElementById('diffback').onclick=renderCreation;
+}
+function startCareer(diffIndex){
+  const name=(draft.name||"").trim()||"Anonymus Kickerlein";
+  let startClub, startOVR, potential, role="prospect";
+  if(draft.mode===2){ // Golden Feet – Wunderkind, freie Vereinswahl
+    startClub = CLUBS.find(c=>c.n===draft.startClubName) || pick(CLUBS.filter(c=>c.l>=74));
+    const age=Math.max(19,draft.age);
+    startOVR=clamp(Math.round(70+(age-19)*1.3+rint(-1,3)),66,80);
+    potential=clamp(startOVR+rint(22,40),startOVR+18,99);
+    role="rotation";
+    draft.age=age;
+  } else if(draft.mode===1){ // Hohe Erwartungen – Fußballer-Familie
+    startClub=pick(CLUBS.filter(c=>c.l>=68 && c.l<=74));
+    startOVR=clamp(Math.round(64+(draft.age-16)*1.5+rint(-1,3)),58,76);
+    potential=clamp(startOVR+rint(20,38),startOVR+16,99);
+  } else if(draft.mode===3){ // Street Footballer – rohes Talent, arm, gescoutet
+    startClub=pick(CLUBS.filter(c=>c.l<=62));
+    startOVR=clamp(Math.round(53+(draft.age-16)*1.3+rint(-2,2)),47,63);
+    potential=clamp(startOVR+rint(28,46),startOVR+24,99);
+  } else { // From Zero to Hero
+    startClub=pick(CLUBS.filter(c=>c.l<=64));
+    startOVR=clamp(Math.round(58+(draft.age-16)*1.6+rint(-2,2)),52,72);
+    potential=clamp(startOVR+rint(16,36),startOVR+14,99);
+  }
+  const jn=(draft.jerseyName||"").trim()||((name.trim().split(/\s+/).pop()||"Profi").toUpperCase());
+  P={
+    name,age:draft.age,nat:draft.nat,pos:draft.pos, pos2:draft.pos2||"",
+    jerseyName:jn, number:draft.number||suggestNumber(draft.pos), foot:draft.foot||"Rechts",
+    style:PLAYSTYLES[draft.pos][draft.style], av:Object.assign({},draft.av),
+    ovr:startOVR, potential, club:{n:startClub.n,lg:startClub.lg,l:startClub.l}, role,
+    coachFavor: role==="star"?64:role==="rotation"?50:42, transferRequested:false, captain:false,
+    year:2025, retireAge:rint(35,38), seasonNo:1, diffLevel:(diffIndex!=null?diffIndex:1),
+    wage:baseWage(startClub.l,startOVR), money:0, morale:70, contractYears:3, releaseClause:false,
+    goals:0,assists:0,cs:0,apps:0,titles:[],ballon:0,caps:0,intlGoals:0,
+    clubs:new Set([startClub.n]), peakOVR:startOVR, history:[], lastResult:null,
+    world:initWorld()
+  };
+  clearSave();
+  renderHub();
+}
+
+/* ============================ SEASON SIM ============================ */
+function predictRole(share){
+  if(share>=0.72) return {label:"Stammspieler",color:"var(--acc)",sub:"du spielst fast immer"};
+  if(share>=0.45) return {label:"Rotationsspieler",color:"var(--warn)",sub:"du kämpfst um Einsätze"};
+  if(share>=0.20) return {label:"Ergänzungsspieler",color:"#ff9a5a",sub:"eher von der Bank"};
+  return {label:"Reservist / Bank",color:"var(--bad)",sub:"kaum Spielzeit – gefährlich für deine Entwicklung"};
+}
+function baseShare(){
+  const gap=P.ovr-P.club.l;
+  let s=logistic(gap/5.5);
+  if(P.role==="star") s=Math.max(s,0.74);
+  if(P.role==="prospect") s=Math.min(s,0.55);
+  return clamp(s,0.02,0.98);
+}
+
+function simulateSeason(training){
+  const meta=posOf(P.pos), fam=meta.fam, rates=POS_RATES[P.pos], st=P.style, club=P.club;
+  const _wc=P.world&&P.world.clubs[P.club.n]; if(_wc){ P.club.l=Math.round(_wc.level); P.club.lg=_wc.league; }
+  let share=baseShare();
+
+  let injuryRisk=(0.07+Math.max(0,P.age-28)*0.022+training.risk)*DIFF().injury;
+  let injured=false, injTxt=null;
+  if(R()<clamp(injuryRisk,0.03,0.55)){
+    injured=true; const sev=R();
+    const f = sev<0.18?0.25 : sev<0.5?0.55 : 0.78; share*=f;
+    injTxt = sev<0.18?"Schwere Verletzung – fast die ganze Saison raus." :
+             sev<0.5?"Längere Verletzung – viele Spiele verpasst." :
+             "Kleinere Verletzung – ein paar Wochen out.";
+  }
+  share=clamp(share,0.01,0.98);
+  // Negative Saison-Ereignisse (Streit, Formkrise, Disziplin)
+  let seasonEvent=null;
+  if(!injured && R()<0.14*DIFF().event){
+    seasonEvent=pick([
+      {t:"Streit mit einem Mitspieler",pen:0.86,mor:-11},
+      {t:"Zoff mit dem Trainer",pen:0.82,mor:-13},
+      {t:"Formkrise – der Knoten platzt nicht",pen:0.75,mor:-7},
+      {t:"Disziplinlosigkeit – zu spät zum Training",pen:0.9,mor:-9},
+      {t:"Schwierige private Phase",pen:0.85,mor:-8}
+    ]);
+    share=clamp(share*seasonEvent.pen,0.01,0.98);
+  }
+
+  const cupGames = tierOf(club.l)<=2?8:4;
+  const games=34+cupGames;
+  const apps=Math.round(share*games);
+  const minutes=Math.round(share*games*82);
+  let posGames;
+  if(P.pos2 && P.pos2!==P.pos && apps>0){ const sec=Math.round(apps*(0.15+R()*0.22)); posGames=[{pos:P.pos,games:apps-sec},{pos:P.pos2,games:sec}]; }
+  else posGames=[{pos:P.pos,games:apps}];
+
+  const teamF=clamp(1+(club.l-72)*0.013,0.7,1.55);
+  const ovrF=clamp(1+(P.ovr-72)*0.010,0.75,1.4);
+  const mor=(P.morale!=null?P.morale:65);
+  const moraleF=1+(mor-65)/280;
+
+  let goals=0,assists=0,cs=0,conceded=0,saves=0;
+  if(fam!=="gk"){
+    const expG=rates.g*(minutes/90)*teamF*ovrF*st.g*training.rate*moraleF;
+    const expA=rates.a*(minutes/90)*teamF*ovrF*st.a*moraleF;
+    goals=poisson(expG); assists=poisson(expA);
+  }
+  if(fam==="gk"||fam==="def"){
+    const expConc=clamp(1.45-(club.l-72)*0.032-(P.ovr-72)*(fam==="gk"?0.022:0.010)*st.cs,0.22,2.6);
+    for(let i=0;i<apps;i++){ const c=poisson(expConc); conceded+=c; if(c===0) cs++; if(fam==="gk"){ const shots=c+poisson(2.7); saves+=Math.max(0,shots-c); } }
+  }
+
+  let perf;
+  if(fam==="score"||fam==="create"){
+    const scorer = fam==="score" ? goals+0.6*assists : assists+0.7*goals;
+    const exp=Math.max(1,(rates.g*st.g+rates.a*st.a)*(minutes/90)*teamF*ovrF);
+    const overP=(goals+assists-exp)/exp;
+    perf=clamp(5.0+overP*1.8+scorer*0.11,1,10);
+  } else if(fam==="def"){
+    const csRate=apps>0?cs/apps:0;
+    perf=clamp(4.0+csRate*6.0+(goals+assists)*0.2,1,10);
+  } else {
+    const csRate=apps>0?cs/apps:0;
+    const savePct=(saves+conceded)>0?saves/(saves+conceded):0;
+    perf=clamp(3.2+csRate*4.0+savePct*3.0,1,10);
+  }
+  if(apps<6) perf=Math.min(perf,4.5);
+  perf=clamp(perf + (mor-65)/45, 1, 10);
+
+  let base; const a=P.age;
+  if(a<=21) base=3.4; else if(a<=24) base=2.3; else if(a<=27) base=1.3;
+  else if(a<=29) base=0.5; else if(a<=31) base=-0.4; else if(a<=33) base=-1.3; else base=-2.3;
+  const minF=Math.sqrt(share);
+  const perfF=0.55+perf/12;
+  const room=clamp((P.potential-P.ovr)/7,0.2,1.4);
+  let dOVR = base>0 ? base*minF*perfF*room*training.grow*DIFF().growth : base+(perf>7?0.4:0);
+  let newOVR=clamp(Math.round((P.ovr+dOVR)*10)/10,45,99);
+
+  const titlesWon=[];
+  // ===== LIGA & LEBENDE WELT =====
+  const playedLeague=club.lg;
+  const imp=clamp((P.ovr-club.l+4)/8,0.2,1.6)*Math.max(share,0.1);
+  const playerBoost=(perf-5.5)*2.4*imp;                 // deine Leistung zieht den Klub hoch/runter
+  const worldSim=advanceWorld(P.world, club.n, playerBoost);
+  P.world.lastTables=Object.assign({}, worldSim.tables, europeanTables(P.world, club.n, playerBoost));
+  P.world.lastYear=P.year; P.world.lastEvents=worldSim.events; P.world.lastPlayoffs=worldSim.playoffs;
+  const myTable=worldSim.tables[playedLeague]||[];
+  const myRow=myTable.find(r=>r.name===club.n);
+  let leaguePos=myRow?myRow.pos:Math.round(clamp(1+(86-club.l)*0.6,1,20));
+  const finishLabel=leagueContext(playedLeague,leaguePos,myTable.length);
+  const myPO=(worldSim.playoffs||[]).find(p=>p.topClub===club.n||p.secClub===club.n);
+  let relPlayoff=null;
+  if(myPO){ const iAmTop=myPO.topClub===club.n; relPlayoff={opp:iAmTop?myPO.secClub:myPO.topClub, iAmTop, won:iAmTop?myPO.topStays:!myPO.topStays}; }
+  const boostNote = playerBoost>4?"⬆ dein starkes Jahr hat den Klub nach oben getragen":playerBoost<-2.5?"⬇ dein schwaches Jahr hat den Klub gebremst":"";
+  if(leaguePos===1 && TOP_LEAGUES.includes(playedLeague)) titlesWon.push(`${P.year} Meister (${club.n})`);
+
+  // NATIONALER POKAL
+  const cupWon = R()<(tierOf(club.l)<=2?0.16:0.09);
+  const cupIdx = cupWon?5:clamp(Math.round((tierOf(club.l)<=1?3.2:tierOf(club.l)<=2?2.3:1.0)+gauss()*1.2),0,4);
+  const cupLabel=compResult(CUP_ROUNDS,cupWon,cupIdx,"cup",club.n,playedLeague);
+  if(cupWon) titlesWon.push(`${P.year} Pokalsieger`);
+
+  // EUROPAPOKAL (Champions / Europa / Conference League je nach Stärke)
+  let euroName=null, clLabel=null;
+  const euro=euroCompetition(club);
+  if(euro){
+    const euroWon = R()<euro.winCh;
+    const euroIdx = euroWon?5:clamp(Math.round(euro.idx+gauss()*1.1),0,4);
+    euroName=euro.name;
+    clLabel=compResult(CL_ROUNDS,euroWon,euroIdx,"club",club.n);
+    if(euroWon) titlesWon.push(`${P.year} ${euro.name}`);
+  }
+
+  // NATIONALMANNSCHAFT – Turnierbaum passend zur Konföderation
+  const nat=NATIONS.find(n=>n.name===P.nat);
+  let calledUp=false, tour=null, intlG=0, intlApps=0, tourWon=false, ntLabel=null, ntBracket=null;
+  if(nat && P.ovr>=nat.thr-1){
+    calledUp=true; intlApps=poisson(6)+2;
+    intlG=poisson(rates.g*st.g*(intlApps)*0.55*ovrF);
+    tour = tournamentFor(nat,P.year);
+    const strength=clamp((90-nat.thr)/16 + (P.ovr-nat.thr)/20,0.05,0.55);
+    const knockout=(t,idx,won)=>{ ntBracket=buildKnockout16(nat,t,idx,won); let lm=null; for(const rd of ntBracket.rounds){for(const m of rd.matches){if(m.aMe||m.bMe)lm={rd:rd.name,m};}} if(won) return "Sieger 🏆"; if(lm){const m=lm.m,opp=m.aMe?m.b:m.a,ps=m.aMe?m.sa:m.sb,os=m.aMe?m.sb:m.sa;return `${lm.rd} – ${ps}:${os} gegen ${opp}`;} return "früh raus"; };
+    if(tour==="WM-Qualifikation"){
+      const qp=clamp(0.30+(nat.thr-70)/22+(P.ovr-nat.thr)/40,0.25,0.97);
+      P.wmQualified=R()<qp;
+      ntLabel = P.wmQualified?"✅ für die WM qualifiziert":"❌ WM-Quali gescheitert – WM verpasst";
+      ntBracket=null;
+    } else if(tour==="Weltmeisterschaft"){
+      if(P.wmQualified===false){ ntLabel="❌ nicht qualifiziert – WM verpasst"; ntBracket=null; intlG=0; intlApps=Math.min(intlApps,2); }
+      else { tourWon=R()<strength*0.5; const exitIdx=tourWon?4:clamp(Math.round((nat.thr-73)/4+gauss()*1.0),0,3); ntLabel=knockout(tour,exitIdx,tourWon); P.wmQualified=undefined; }
+    } else if(tour==="Nations League"){
+      tourWon=R()<strength*0.5; const rounds=NL_ROUNDS;
+      const ntIdx=tourWon?rounds.length-1:clamp(Math.round((nat.thr-72)/3.4+gauss()*1.0),0,rounds.length-2);
+      ntBracket=buildBracket(nat,tour,ntIdx,tourWon,rounds);
+      if(tourWon) ntLabel="Sieger 🏆"; else if(ntIdx<=0) ntLabel=rounds[0];
+      else { const last=ntBracket.ko[ntBracket.ko.length-1]; ntLabel=last?`${rounds[ntIdx]} – ${last.score} gegen ${last.opp}`:rounds[ntIdx]; }
+    } else { // Kontinentalturnier (EM, Copa América, Afrika-Cup, Asien-Cup, Gold Cup)
+      tourWon=R()<strength*0.5; const exitIdx=tourWon?4:clamp(Math.round((nat.thr-73)/4+gauss()*1.0),0,3);
+      ntLabel=knockout(tour,exitIdx,tourWon);
+    }
+    if(tourWon) titlesWon.push(`${P.year} ${tour} 🏆`);
+  }
+
+  // Klub-Status für nächste Saison übernehmen (Auf-/Abstieg nimmt dich mit)
+  const wcNew=P.world.clubs[club.n];
+  const oldRank=pyramidRank(playedLeague), newRank=wcNew?pyramidRank(wcNew.league):oldRank;
+  const clubPromoted = wcNew && wcNew.league!==playedLeague && newRank<oldRank;
+  const clubRelegated = wcNew && wcNew.league!==playedLeague && newRank>oldRank;
+  if(wcNew){ P.club.lg=wcNew.league; P.club.l=Math.round(wcNew.level); }
+  const worldEvents=worldSim.events.filter(e=>e.name!==club.n).slice(0,4);
+
+  // BALLON D'OR – Rangliste gegen andere Star-Spieler (altern & Rücktritt → Newgens)
+  const rivals=(P.world.rivals||[]);
+  rivals.forEach(rv=>{
+    rv.age=(rv.age||27)+1;
+    const a=rv.age; let d;
+    if(a<=24) d=0.9; else if(a<=28) d=0.25; else if(a<=31) d=-0.2; else if(a<=33) d=-0.8; else d=-1.6;
+    rv.star=clamp(rv.star+d+gauss()*0.4, 76, 96);
+  });
+  const bdoRetirements=[];
+  for(let i=0;i<rivals.length;i++){ if(rivals[i].age >= (rivals[i].retireAge||36)){ bdoRetirements.push(rivals[i].name); rivals[i]=makeNewgen(); } }
+  const contribution=goals+assists*0.7+cs*0.5;
+  const playerScore=P.ovr*0.95 + (perf-6)*2.2 + titlesWon.length*3.5 + (tourWon?6:0) + intlG*0.4 + Math.min(contribution,48)*0.22;
+  const bdoEntries=rivals.map(rv=>({name:rv.name,club:rv.club,isMe:false,score:rv.star*0.92+rint(0,15)+(R()<0.12?5:0)}));
+  bdoEntries.push({name:P.name,club:P.club.n,isMe:true,score:playerScore});
+  bdoEntries.sort((a,b)=>b.score-a.score);
+  bdoEntries.forEach((e,i)=>{ e.rank=i+1; e.score=Math.round(e.score); });
+  const bdoRank=(bdoEntries.find(e=>e.isMe)||{}).rank;
+  const bdoTotal=bdoEntries.length;
+  const ballon=bdoRank===1;
+  const bdoRanking=bdoEntries.slice(0,8);
+  const topTransfers=simTransfers(rivals); P.world.lastTransfers=topTransfers;
+  const sponsorIncome=Math.round((Math.pow(1.09, Math.max(0,P.ovr-68))*0.25 + (P.ballon||0)*0.6)*10)/10;
+
+  const offers=generateOffers(perf,share);
+  const gloryVal = meta.gloryKey==="goals"?goals:meta.gloryKey==="assists"?assists:cs;
+
+  return {training,share,apps,minutes,goals,assists,cs,conceded,saves,perf,fam,
+    dOVR:Math.round((newOVR-P.ovr)*10)/10,newOVR,titlesWon,injured,injTxt,
+    calledUp,tour,intlG,intlApps,tourWon,ballon,offers,club,year:P.year,gloryVal,
+    leaguePos,finishLabel,cupLabel,clLabel,euroName,ntLabel,ntBracket,
+    playedLeague,leagueTable:myTable,worldEvents,clubPromoted,clubRelegated,boostNote,
+    bdoRanking,bdoRank,bdoTotal,bdoRetirements,relPlayoff,seasonEvent,posGames,topTransfers,sponsorIncome};
+}
+
+function generateOffers(perf,share){
+  const cur=P.club, curT=tierOf(cur.l), offers=[];
+  const ALL=Object.values(P.world.clubs).map(c=>({n:c.name,lg:c.league,l:Math.round(c.level)}));
+  const expiring=(P.contractYears||0)<=1, hasClause=!!P.releaseClause, benchStuck=share<0.28;
+  const forced=!!P.transferRequested; P.transferRequested=false;
+  // Interesse anderer Klubs – NICHT jede Saison
+  let interest = (perf>=8?0.7 : perf>=7.2?0.46 : perf>=6.4?0.24 : perf>=5.5?0.09 : 0.02) * DIFF().interest;
+  if(hasClause && perf>=6.8) interest=Math.max(interest,0.85);
+  if(expiring) interest=Math.max(interest,0.55);
+  if(benchStuck) interest=Math.max(interest,0.5);
+  if((P.morale||65)<40) interest+=0.1;
+  if((P.morale||65)<28) interest=Math.max(interest,0.7);   // sehr unzufrieden → Klub stellt dich zur Disposition
+  if(forced) interest=1;                                    // Wechsel gefordert → garantiert Angebote
+  if(R()>interest) return [];                       // diese Saison kein Angebot
+  let pool=[];
+  const wantUp = perf>=6.6 && P.ovr>=cur.l-2;
+  if(wantUp) pool=ALL.filter(c=>c.n!==cur.n && c.l<=P.ovr+5 && (tierOf(c.l)<curT || c.l>cur.l+1));
+  if(benchStuck) pool=pool.concat(ALL.filter(c=>c.n!==cur.n && c.l<=P.ovr-2 && c.l>=P.ovr-10));
+  if(!pool.length) pool=ALL.filter(c=>c.n!==cur.n && Math.abs(c.l-P.ovr)<=3);
+  const seen=new Set(); pool=pool.filter(c=>!seen.has(c.n)&&seen.add(c.n));
+  pool.sort((a,b)=>b.l-a.l);
+  let maxOffers = hasClause?3 : (expiring||benchStuck)?2 : 1;   // fester Vertrag ohne Klausel: höchstens 1
+  const chosen=[]; const topPool=pool.slice(0,7);
+  while(chosen.length<maxOffers && topPool.length){ chosen.push(topPool.splice(Math.floor(R()*topPool.length),1)[0]); }
+  chosen.forEach(c=>{ const gap=P.ovr-c.l, s2=clamp(logistic(gap/5.5),0.05,0.95), role=predictRole(s2); offers.push({club:c,role:role.label,roleColor:role.color,share:s2}); });
+  return offers.sort((a,b)=>b.club.l-a.club.l);
+}
+
+/* ============================ HUB ============================ */
+function renderHub(){
+  saveGame();
+  const role=predictRole(baseShare());
+  const gap=Math.round((P.ovr-P.club.l)*10)/10;
+  const gp=posOf(P.pos);
+  const trainCards=TRAININGS.map((t,i)=>`<div class="opt" data-tr="${i}">${t.n}<small>${t.desc}</small></div>`).join("");
+  const lastPos=P.lastResult?` · letzte Saison Platz ${P.lastResult.leaguePos} (${P.lastResult.playedLeague})`:'';
+  app.innerHTML=`
+  ${playerBar()}
+  <div class="card">
+    <h2>Saison ${P.year} · Vorbereitung</h2>
+    <div style="display:flex;align-items:center;gap:11px;margin-bottom:8px">
+      ${clubBadge(P.club.n,38)}
+      <div><b>${P.club.n}</b> <span class="lvlpill">Level ${P.club.l}</span><br><span class="hint" style="margin:0">${P.club.lg}${lastPos}</span></div>
+    </div>
+    <div class="kv"><span class="k">💰 Gehalt · Konto</span><span class="v">${fmtMoney(P.wage)}/J · ${fmtMoney(P.money)}</span></div>
+    <div class="kv"><span class="k">📄 Vertrag</span><span class="v">noch ${P.contractYears||0} Jahr${(P.contractYears||0)===1?'':'e'}${P.releaseClause?' · Klausel':''}${(P.contractYears||0)<=1?' <span style="color:var(--warn)">(läuft aus)</span>':''}</span></div>
+    ${P.transferRequested?`<div class="note bad">🚪 Du hast einen Wechsel gefordert – nächste Saison kommen Angebote.</div>`:''}
+    <div class="rolebox">
+      <span class="dot" style="background:${role.color}"></span>
+      <div>
+        <b style="color:${role.color}">Prognose: ${role.label}</b>
+        <small>Dein Gap: OVR ${P.ovr} − Klub ${P.club.l} = <b style="color:${gap>=0?'var(--acc)':'var(--bad)'}">${gap>=0?'+':''}${gap}</b> · ${role.sub}</small>
+      </div>
+    </div>
+    <div class="halfopen">Halb-offen: die Rolle siehst du vorher – wie viele ${gp.glory} es werden, entscheidet die Saison.</div>
+  </div>
+  <div class="card">
+    <h2>Trainingsfokus wählen</h2>
+    <p class="hint">Der Haupthebel deiner Entwicklung. Jede Wahl ist ein Kompromiss.</p>
+    <div class="opts" id="tropts">${trainCards}</div>
+  </div>
+  <button class="ghost" id="opentbl">📋 Tabellen ansehen</button>
+  ${!P.transferRequested?`<button class="ghost" id="reqtransfer">🚪 Wechsel fordern</button>`:''}
+  <button class="ghost" id="saveexit">💾 Speichern & beenden</button>`;
+  document.getElementById('tropts').onclick=e=>{const b=e.target.closest('[data-tr]');if(!b)return;runSeason(TRAININGS[+b.dataset.tr]);};
+  document.getElementById('opentbl').onclick=()=>openTable(renderHub);
+  { const rt=document.getElementById('reqtransfer'); if(rt) rt.onclick=()=>{ P.transferRequested=true; P.morale=clamp((P.morale||65)-6,0,100); P.coachFavor=clamp((P.coachFavor||50)-12,0,100); renderHub(); }; }
+  document.getElementById('saveexit').onclick=()=>{saveGame();renderCreation();};
+}
+function roleLabel(rl){ return rl==="star"?"Stammspieler":rl==="rotation"?"Rotationsspieler":"Ergänzungsspieler"; }
+function playerBar(){
+  const mor=Math.round(P.morale!=null?P.morale:65), cf=Math.round(P.coachFavor!=null?P.coachFavor:50);
+  const morCol=mor>=70?'var(--acc)':mor>=45?'var(--warn)':'var(--bad)';
+  const cfCol=cf>=70?'var(--acc)':cf>=40?'var(--warn)':'var(--bad)';
+  const num=P.number?`#${P.number} `:'';
+  return `<div class="playerbar">
+    <div class="face">${avatarComposite(P.av,48)}</div>
+    <div class="meta">
+      <div class="nm">${P.captain?'<span title="Kapitän" style="color:var(--gold)">🅒</span> ':''}${P.name} <span class="tag">${num}${P.pos}${P.pos2?'/'+P.pos2:''}</span></div>
+      <div class="dt">${P.age} J · ${P.nat} · ${P.style.n}${P.foot?' · 🦶'+P.foot[0]:''} · ${P.year}</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:5px">
+        <span class="pbpill" style="color:${morCol}">😊 Moral ${mor}</span>
+        <span class="pbpill" style="color:${cfCol}">🎯 Gunst ${cf} · ${roleLabel(P.role)}</span>
+        <span class="pbpill">⚙️ ${DIFF().t}</span>
+      </div>
+    </div>
+    <div class="ovrbadge"><div class="n">${P.ovr}</div><div class="l">OVR</div></div>
+  </div>`;
+}
+
+/* ============================ SAISON & ERGEBNIS ============================ */
+function runSeason(training){
+  const r=simulateSeason(training);
+  P.goals+=r.goals; P.assists+=r.assists; P.cs+=r.cs; P.apps+=r.apps; P.caps+=r.intlApps; P.intlGoals+=r.intlG;
+  r.titlesWon.forEach(t=>P.titles.push(t));
+  if(r.ballon) P.ballon++;
+  P.ovr=r.newOVR; if(P.ovr>P.peakOVR)P.peakOVR=P.ovr;
+  P.money=(P.money||0)+(P.wage||0)+(r.sponsorIncome||0);
+  P.wage=Math.max(P.wage||0, baseWage(P.club.l,P.ovr)*0.9);
+  P.contractYears=Math.max(0,(P.contractYears||0)-1);
+  { const mo=(P.morale!=null?P.morale:65);
+    P.morale=clamp(mo + (r.perf-6)*1.3 + (r.titlesWon.length?3:0) + (r.injured?-6:0) + (r.share<0.3?-5:0) + (r.seasonEvent?r.seasonEvent.mor:0) + (65-mo)*0.12, 0, 100); }
+  // Trainergunst – Rolle hoch-/runterarbeiten (schwer)
+  { const roleExp = P.role==="star"?7.1 : P.role==="rotation"?6.3 : 5.9;
+    let cf=(P.coachFavor!=null?P.coachFavor:50);
+    const cfG=(r.perf-roleExp)*3.0;
+    cf += (cfG>0?cfG*DIFF().coach:cfG) + (r.titlesWon.length?3:0) + (r.seasonEvent?-9:0) + (r.injured?-3:0) + (r.share<0.22?-4:0) + (50-cf)*0.06;
+    P.coachFavor=clamp(cf,0,100);
+    const order=["prospect","rotation","star"], idx=order.indexOf(P.role);
+    r.roleChange=null;
+    if(idx<2 && P.coachFavor>=80){ P.role=order[idx+1]; P.coachFavor=62; r.roleChange={dir:"up",role:P.role}; }
+    else if(idx>0 && P.coachFavor<=20){ P.role=order[idx-1]; P.coachFavor=46; r.roleChange={dir:"down",role:P.role}; }
+  }
+  // Kapitänsbinde – aus Erfahrung, Status & Moral
+  r.becameCaptain=false;
+  if(!P.captain && P.role==="star" && (P.coachFavor||50)>=72 && P.age>=25 && (P.morale||65)>=55 && (P.seasonNo||1)>=4 && R()<0.55){ P.captain=true; r.becameCaptain=true; }
+  else if(P.captain && P.role!=="star"){ P.captain=false; }
+  if(P.captain) P.morale=clamp(P.morale+1.5,0,100);
+  P.history.push({year:P.year,age:P.age,club:P.club.n,ovr:P.ovr,glory:r.gloryVal,apps:r.apps});
+  P.lastResult=r;
+  renderResult(r);
+}
+
+function renderResult(r){
+  const fam=r.fam;
+  let statBlocks="";
+  if(fam==="score"){
+    statBlocks=`<div class="stat"><div class="n">${r.goals}</div><div class="l">Tore</div></div><div class="stat"><div class="n">${r.assists}</div><div class="l">Assists</div></div><div class="stat"><div class="n">${r.apps}</div><div class="l">Einsätze</div></div>`;
+  } else if(fam==="create"){
+    statBlocks=`<div class="stat"><div class="n">${r.assists}</div><div class="l">Assists</div></div><div class="stat"><div class="n">${r.goals}</div><div class="l">Tore</div></div><div class="stat"><div class="n">${r.apps}</div><div class="l">Einsätze</div></div>`;
+  } else if(fam==="def"){
+    statBlocks=`<div class="stat"><div class="n">${r.cs}</div><div class="l">Zu-Null</div></div><div class="stat"><div class="n">${r.goals+r.assists}</div><div class="l">Tore+Assists</div></div><div class="stat"><div class="n">${r.apps}</div><div class="l">Einsätze</div></div>`;
+  } else {
+    const sp=(r.saves+r.conceded)>0?Math.round(r.saves/(r.saves+r.conceded)*100):0;
+    statBlocks=`<div class="stat"><div class="n">${r.cs}</div><div class="l">Zu-Null</div></div><div class="stat"><div class="n">${sp}%</div><div class="l">Paradenquote</div></div><div class="stat"><div class="n">${r.conceded}</div><div class="l">Gegentore</div></div>`;
+  }
+
+  let notes="";
+  if(r.injured) notes+=`<div class="note bad">🩹 ${r.injTxt}</div>`;
+  if(r.seasonEvent) notes+=`<div class="note bad">😠 ${r.seasonEvent.t} – zehrt an der Saison (Moral ${r.seasonEvent.mor}).</div>`;
+  if(r.relPlayoff){ const p=r.relPlayoff; notes+=`<div class="note ${p.won?'good':'bad'}">🎭 <b>Relegation</b> gegen ${p.opp}: ${p.won?'GEWONNEN':'VERLOREN'} – ${p.iAmTop?(p.won?'Klasse gehalten!':'abgestiegen.'):(p.won?'AUFGESTIEGEN!':'Aufstieg knapp verpasst.')}</div>`; }
+  if(r.share<0.3 && !r.injured && !r.seasonEvent) notes+=`<div class="note">🪑 Viel Bank in dieser Saison – deine Entwicklung leidet. Vielleicht ein Wechsel, wo du spielst?</div>`;
+  if(r.roleChange) notes+=`<div class="note ${r.roleChange.dir==='up'?'good':'bad'}">${r.roleChange.dir==='up'?'⬆ Du hast den Trainer überzeugt – ab jetzt '+roleLabel(r.roleChange.role)+'!':'⬇ Der Trainer degradiert dich zum '+roleLabel(r.roleChange.role)+'.'}</div>`;
+  if(r.becameCaptain) notes+=`<div class="note good">🅒 Du wirst zum <b>Kapitän</b> ernannt – die Kabine folgt dir!</div>`;
+  if(r.ballon) notes+=`<div class="note good">🏅 <b>Ballon d'Or!</b> Du bist der beste Spieler der Welt in dieser Saison.</div>`;
+  if(r.calledUp) notes+=`<div class="note good">🌍 Nationalelf (${P.nat}) · ${r.tour}: ${r.intlApps} Spiele, ${r.intlG} Tore${r.tourWon?` – <b>TURNIER GEWONNEN!</b> 🏆`:''}</div>`;
+  else notes+=`<div class="note">🌍 Keine Nominierung für ${P.nat} (nötig: OVR ${NATIONS.find(n=>n.name===P.nat).thr}). Weiter dran bleiben.</div>`;
+  if(r.titlesWon.length) notes+=`<div class="trophies">${r.titlesWon.map(t=>`<span class="trophy">🏆 ${t}</span>`).join("")}</div>`;
+
+  const dov=r.dOVR>=0?`<span style="color:var(--acc)">+${r.dOVR}</span>`:`<span style="color:var(--bad)">${r.dOVR}</span>`;
+
+  app.innerHTML=`
+  ${playerBar()}
+  <div class="card">
+    <h2>Saison ${r.year} · Bilanz bei ${r.club.n}</h2>
+    <div class="statgrid">${statBlocks}</div>
+    <div class="kv"><span class="k">Saison-Note</span><span class="v">${r.perf.toFixed(1)} / 10</span></div>
+    <div class="kv"><span class="k">Spielzeit-Anteil</span><span class="v">${Math.round(r.share*100)}%</span></div>
+    <div class="kv"><span class="k">OVR-Entwicklung</span><span class="v">${dov} → ${P.ovr}</span></div>
+    ${r.posGames&&r.posGames.length>1?`<div class="kv"><span class="k">Einsätze nach Position</span><span class="v">${r.posGames.filter(p=>p.games>0).map(p=>p.pos+' '+p.games).join(' · ')}</span></div>`:''}
+    ${r.sponsorIncome?`<div class="kv"><span class="k">💵 Sponsoren & Werbung</span><span class="v" style="color:var(--acc)">+${fmtMoney(r.sponsorIncome)}</span></div>`:''}
+    ${notes}
+  </div>
+  <div class="card">
+    <h2>Abschneiden ${r.year}</h2>
+    <div class="kv"><span class="k" style="display:inline-flex;align-items:center;gap:8px">${clubBadge(r.club.n,20)}${r.playedLeague}</span><span class="v">Platz ${r.leaguePos} · ${r.finishLabel}</span></div>
+    ${r.boostNote?`<div class="halfopen" style="text-align:left;margin:0 0 6px">${r.boostNote}</div>`:''}
+    <div class="kv"><span class="k">Nationaler Pokal</span><span class="v">${r.cupLabel}</span></div>
+    ${r.clLabel?`<div class="kv"><span class="k">${r.euroName||'Europapokal'}</span><span class="v">${r.clLabel}</span></div>`:''}
+    ${r.ntLabel?`<div class="kv" id="ntrow" style="${r.ntBracket?'cursor:pointer':''}"><span class="k">${r.tour} · ${P.nat} ${r.ntBracket?'<span style="color:var(--acc)">▸ Turnierbaum</span>':''}</span><span class="v">${r.ntLabel}</span></div>`:''}
+  </div>
+  ${ballonCard(r)}
+  ${transfersCard(r)}
+  ${leagueTableCard(r)}
+  ${worldNewsCard(r)}
+  ${renderOffers(r)}
+  <button class="ghost" id="opentbl">📋 Alle Tabellen ansehen</button>
+  <button class="ghost" id="cont">Ohne Wechsel weiter ➜ nächste Saison</button>`;
+
+  document.getElementById('cont').onclick=nextSeason;
+  document.getElementById('opentbl').onclick=()=>openTable(()=>renderResult(P.lastResult));
+  if(r.ntBracket){ const nr=document.getElementById('ntrow'); if(nr) nr.onclick=()=>openBracket(r.ntBracket,()=>renderResult(r)); }
+  app.querySelectorAll('[data-offer]').forEach(btn=>{
+    btn.onclick=()=>{ openNegotiation(r.offers[+btn.dataset.offer], r); };
+  });
+}
+
+function renderOffers(r){
+  if(!r.offers.length) return `<div class="card"><h2>Transfermarkt</h2><p class="hint">Diese Saison keine neuen Angebote. Liefer ab, dann klopfen die Klubs an.</p></div>`;
+  const rows=r.offers.map((o,i)=>`
+    <div class="offer">
+      <div style="flex:none">${clubBadge(o.club.n,34)}</div>
+      <div class="info">
+        <b>${o.club.n}</b> <span class="lvlpill">Level ${o.club.l}</span>
+        <small>${o.club.lg} · Rolle: <span style="color:${o.roleColor};font-weight:700">${o.role}</span> (${Math.round(o.share*100)}% Spielzeit)</small>
+      </div>
+      <button data-offer="${i}">Unterschreiben</button>
+    </div>`).join("");
+  return `<div class="card">
+    <h2>Angebote ⚡</h2>
+    <p class="hint">Halb-offen: Klub-Level und Rollen-Prognose siehst du. Größer ist nicht immer besser – auf der Bank stagnierst du.</p>
+    ${rows}
+  </div>`;
+}
+
+// Abschluss-Tabelle deiner Liga (mit Wappen), dein Klub hervorgehoben
+function leagueTableCard(r){
+  const T=r.leagueTable||[]; if(!T.length) return "";
+  const rowHTML=t=>{
+    const me=t.name===r.club.n;
+    return `<div class="kv" ${me?'style="background:rgba(0,224,122,.12);margin:0 -8px;padding:8px;border-radius:8px"':''}>
+      <span class="k" style="display:inline-flex;align-items:center;gap:8px">${clubBadge(t.name,20)}<span style="${me?'color:var(--acc);font-weight:800':''}">${t.pos}. ${t.name}${me?' ⚽':''}</span></span>
+      <span class="v" style="color:var(--mut)">Lvl ${t.level}</span></div>`;
+  };
+  let html=T.slice(0,8).map(rowHTML).join("");
+  const mi=T.findIndex(t=>t.name===r.club.n);
+  if(mi>=8) html+=`<div class="halfopen">⋯</div>`+rowHTML(T[mi]);
+  return `<div class="card"><h2>📋 ${r.playedLeague} · Abschlusstabelle</h2>${html}</div>`;
+}
+
+// Aus den anderen Ligen: Auf-/Abstiege (auch wenn du nichts damit zu tun hast)
+function worldNewsCard(r){
+  let items="";
+  if(r.clubPromoted) items+=`<div class="note good">🔼 Dein Klub ${r.club.n} ist aufgestiegen – nächste Saison ${r.club.lg}!</div>`;
+  if(r.clubRelegated) items+=`<div class="note bad">🔽 Dein Klub ${r.club.n} ist abgestiegen – nächste Saison ${r.club.lg}.</div>`;
+  if(!items) return "";
+  return `<div class="card"><h2>🌍 Dein Klub</h2>${items}<p class="halfopen" style="text-align:left;margin-top:6px">Alle Auf-/Abstiege siehst du unter „📋 Tabellen".</p></div>`;
+}
+
+// Ballon d'Or – Rangliste gegen die Konkurrenz
+function ballonCard(r){
+  if(!r.bdoRanking||!r.bdoRanking.length) return "";
+  const rows=r.bdoRanking.map(e=>`<div class="kv" ${e.isMe?'style="background:rgba(255,210,87,.14);margin:0 -8px;padding:8px;border-radius:8px"':''}>
+      <span class="k"><b style="${e.isMe?'color:var(--gold)':''}">${e.rank}. ${e.name}${e.isMe?' ⚽':''}</b> <span class="hint" style="margin:0">· ${e.club}</span></span>
+      <span class="v" style="color:var(--mut)">${e.score}</span></div>`).join("");
+  const head = r.ballon
+    ? `<div class="note good" style="text-align:center;font-weight:800;font-size:15px">🏅 Du gewinnst den Ballon d'Or ${r.year}!</div>`
+    : `<div class="halfopen" style="text-align:left;margin-bottom:6px">Dein Rang im Ballon-d'Or-Ranking: <b>${r.bdoRank}.</b> von ${r.bdoTotal}</div>`;
+  const retire = (r.bdoRetirements&&r.bdoRetirements.length)?`<div class="halfopen" style="text-align:left;margin-top:8px">🎖️ Karriereende: ${r.bdoRetirements.join(", ")} — ein Newgen rückt nach.</div>`:'';
+  return `<div class="card"><h2>🏅 Ballon d'Or ${r.year}</h2>${head}${rows}${r.bdoRank>8?`<div class="halfopen" style="margin-top:4px">⋯ du bist ${r.bdoRank}.</div>`:''}${retire}</div>`;
+}
+// Teuerste Transfers der Saison
+function transfersCard(r){
+  if(!r.topTransfers||!r.topTransfers.length) return "";
+  const rows=r.topTransfers.map((t,i)=>`<div class="kv"><span class="k" style="display:inline-flex;align-items:center;gap:7px">${clubBadge(t.to,18)}<span>${i+1}. <b>${t.name}</b><br><span class="hint" style="margin:0">${t.from} → ${t.to}</span></span></span><span class="v" style="color:var(--gold)">${fmtMoney(t.fee)}</span></div>`).join("");
+  return `<div class="card"><h2>💸 Teuerste Transfers ${r.year}</h2>${rows}</div>`;
+}
+
+// Öffenbare Tabellen-Ansicht mit Liga-Auswahl
+let _tableLeague=null, _tableBack=null;
+function openTable(back){ _tableBack=back||renderHub; _tableLeague=_tableLeague||P.club.lg; renderTable(); }
+function renderTable(){
+  const tables=(P.world&&P.world.lastTables)||{};
+  let leagues=Object.keys(tables);
+  if(!leagues.length) leagues=[...new Set(Object.values(P.world.clubs).map(c=>c.league))];
+  const euroOrder=["Champions League","Europa League","Conference League"];
+  leagues=euroOrder.filter(l=>leagues.includes(l)).concat(leagues.filter(l=>!euroOrder.includes(l)).sort());
+  if(!leagues.includes(_tableLeague)) _tableLeague=leagues.includes(P.club.lg)?P.club.lg:leagues[0];
+  let data=tables[_tableLeague];
+  if(!data){
+    data=Object.values(P.world.clubs).filter(c=>c.league===_tableLeague).sort((a,b)=>b.level-a.level).map((c,i)=>({name:c.name,level:Math.round(c.level),pos:i+1}));
+  }
+  const opts=leagues.map(l=>`<option ${l===_tableLeague?'selected':''}>${l}</option>`).join("");
+  const rows=data.map(t=>{
+    const me=t.name===P.club.n;
+    return `<tr style="${me?'background:rgba(0,224,122,.12)':''}"><td>${t.pos}</td><td style="text-align:left"><span style="display:inline-flex;align-items:center;gap:8px">${clubBadge(t.name,20)}<span style="${me?'color:var(--acc);font-weight:800':''}">${t.name}${me?' ⚽':''}</span></span></td><td>${t.level}</td></tr>`;
+  }).join("");
+  const ev=(P.world.lastEvents||[]);
+  const evHTML=ev.length
+    ? ev.map(e=>`<div class="kv"><span class="k" style="display:inline-flex;align-items:center;gap:8px">${clubBadge(e.name,18)}${e.name}</span><span class="v" style="color:${e.type==='up'?'var(--acc)':'var(--bad)'}">${e.type==='up'?'🔼 Aufstieg':'🔽 Abstieg'} → ${e.league}</span></div>`).join("")
+    : `<p class="hint">Noch keine Auf-/Abstiege – spiel eine Saison.</p>`;
+  app.innerHTML=`
+    ${playerBar()}
+    <div class="card">
+      <h2>📋 Tabellen${P.world.lastYear?' · Saison '+P.world.lastYear:''}</h2>
+      <p class="hint">Alle Ligen laufen unabhängig weiter. Wähle eine Liga:</p>
+      <select id="lgsel">${opts}</select>
+      <table class="career" style="margin-top:12px"><thead><tr><th>#</th><th style="text-align:left">Verein</th><th>Lvl</th></tr></thead><tbody>${rows}</tbody></table>
+    </div>
+    <div class="card">
+      <h2>🌍 Aus den Ligen · Auf- & Abstiege</h2>
+      ${evHTML}
+    </div>
+    <button class="ghost" id="tback">← Zurück</button>`;
+  document.getElementById('lgsel').onchange=e=>{_tableLeague=e.target.value;renderTable();};
+  document.getElementById('tback').onclick=()=>{ (_tableBack||renderHub)(); };
+}
+
+// Turnierbaum-Ansicht: Gruppe + K.o.-Pfad
+let _bracketBack=null;
+function openBracket(b, back){ _bracketBack=back||(()=>renderResult(P.lastResult)); renderBracketScreen(b); }
+function renderKnockout16(b){
+  const cell=(name,win,isMe)=>`<span style="${isMe?'color:var(--acc);font-weight:800':win?'font-weight:700':'color:var(--mut);opacity:.75'}">${name}${isMe?' ⚽':''}</span>`;
+  const roundsHTML=b.rounds.map(rd=>{
+    const rows=rd.matches.map(m=>{
+      const me=m.aMe||m.bMe, winA=m.w===m.a;
+      let starNote="";
+      if(me){ const opp=m.aMe?m.b:m.a, st=starOf(opp); if(st) starNote=`<div class="halfopen" style="text-align:left;margin:2px 0 0">🌟 Star von ${opp}: ${st}</div>`; }
+      return `<div class="kv" ${me?'style="background:rgba(0,224,122,.10);margin:0 -8px;padding:7px 8px;border-radius:8px;display:block"':''}>
+        <div style="font-size:13.5px">${cell(m.a,winA,m.aMe)} <span style="color:var(--mut)">${m.sa}:${m.sb}</span> ${cell(m.b,!winA,m.bMe)}</div>${starNote}</div>`;
+    }).join("");
+    return `<div style="margin-bottom:12px"><div style="font-weight:700;margin:8px 0 3px">${rd.name}</div>${rows}</div>`;
+  }).join("");
+  const champ=b.champion?`<div class="note good" style="text-align:center;font-weight:800">🏆 ${b.tour}-Sieger: ${b.champion}${b.champion===b.nat?' — DU! ⚽':''}</div>`:'';
+  app.innerHTML=`${playerBar()}
+    <div class="card"><h2>🏆 ${b.tour} · ${b.nat}</h2>${champ}${roundsHTML}</div>
+    <button class="ghost" id="bback">← Zurück</button>`;
+  document.getElementById('bback').onclick=()=>{ (_bracketBack||(()=>renderResult(P.lastResult)))(); };
+}
+function renderBracketScreen(b){
+  if(b.rounds) return renderKnockout16(b);
+  const myPos=b.teams.findIndex(t=>t.isMe)+1;
+  const grp=b.teams.map((t,i)=>`<div class="kv" ${t.isMe?'style="background:rgba(0,224,122,.12);margin:0 -8px;padding:8px;border-radius:8px"':''}>
+    <span class="k"><b style="${t.isMe?'color:var(--acc)':''}">${i+1}. ${t.name}${t.isMe?' ⚽':''}</b></span>
+    <span class="v" style="color:var(--mut)">${t.pts} Pkt</span></div>`).join("");
+  const advMsg=b.advanced?`<div class="note good">✓ Als Gruppen-${myPos}. weiter in die K.o.-Runde</div>`:`<div class="note bad">✗ In der Gruppenphase ausgeschieden (Platz ${myPos})</div>`;
+  const koHTML=b.ko.length?b.ko.map(m=>`
+    <div style="display:flex;align-items:center;gap:11px;padding:11px 13px;margin:8px 0;border-left:3px solid ${m.won?'var(--acc)':'var(--bad)'};background:#0c1526;border-radius:0 10px 10px 0">
+      <span style="font-size:18px">${m.won?'✅':'❌'}</span>
+      <div style="flex:1"><b>${m.round}</b><br><span class="hint" style="margin:0">${m.score} gegen ${m.opp}</span></div>
+    </div>`).join(""):'';
+  const final=b.won?`<div class="note good" style="text-align:center;font-weight:800;font-size:15px">🏆 ${b.tour} GEWONNEN!</div>`:(b.advanced?`<div class="note bad">Ausgeschieden: ${b.exitLabel}</div>`:'');
+  app.innerHTML=`
+    ${playerBar()}
+    <div class="card">
+      <h2>🏆 ${b.tour} · ${b.nat}</h2>
+      <div style="font-weight:700;margin:8px 0 4px">Gruppenphase</div>
+      ${grp}
+      ${advMsg}
+    </div>
+    ${b.advanced?`<div class="card"><h2>K.o.-Baum</h2>${koHTML}${final}</div>`:(final?`<div class="card">${final}</div>`:'')}
+    <button class="ghost" id="bback">← Zurück</button>`;
+  document.getElementById('bback').onclick=()=>{ (_bracketBack||(()=>renderResult(P.lastResult)))(); };
+}
+
+/* ============================ VERTRAGSVERHANDLUNG ============================ */
+let _negOffer=null, _negResult=null, _negLength=3, _negClause=false, _negBack=null, _afterSign=null;
+function openNegotiation(offer, r, opts){ opts=opts||{}; _negOffer=offer; _negResult=r; _negBack=opts.back||(()=>renderResult(_negResult)); _afterSign=opts.after||nextSeason; _negLength=3; _negClause=false; renderNegotiation(); }
+function negWage(base){ let w=base*(1+(_negLength-3)*0.03); if(_negClause) w*=0.9; return Math.round(w*10)/10; }
+function renderNegotiation(){
+  const o=_negOffer; const base=baseWage(o.club.l,P.ovr);
+  const leverage=clamp((P.ovr-o.club.l+2)/15,0.05,0.8);   // härter: braucht echten OVR-Vorsprung
+  const w=negWage(base);
+  const lenChips=[2,3,4,5].map(y=>`<span class="hchip ${_negLength===y?'sel':''}" data-len="${y}">${y} Jahre</span>`).join("");
+  app.innerHTML=`
+    ${playerBar()}
+    <div class="card">
+      <h2>💼 Vertragsverhandlung</h2>
+      <div style="display:flex;align-items:center;gap:11px;margin:6px 0 10px">${clubBadge(o.club.n,40)}<div><b>${o.club.n}</b> <span class="lvlpill">Level ${o.club.l}</span><br><span class="hint" style="margin:0">${o.club.lg} · Rolle: <span style="color:${o.roleColor}">${o.role}</span></span></div></div>
+      <div class="kv"><span class="k">Grundgehalt</span><span class="v">${fmtMoney(w)}/Jahr</span></div>
+      <label>Vertragslänge</label>
+      <div style="display:flex;gap:6px;flex-wrap:wrap" id="lenopts">${lenChips}</div>
+      <label>Ausstiegsklausel</label>
+      <div class="opt ${_negClause?'sel':''}" id="clausetoggle" style="min-width:100%">${_negClause?'✓ ':''}Ausstiegsklausel einbauen<small>−10% Gehalt, aber Topklubs können dich jederzeit holen (mehr Angebote)</small></div>
+      <p class="hint" style="margin-top:10px">Verhandlungshebel: <b>${Math.round(leverage*100)}%</b> (OVR ${P.ovr} vs. Klub ${o.club.l}). Klubs verhandeln hart – nur wer den Verein wirklich trägt, fordert erfolgreich mehr.</p>
+      <div class="opts">
+        <div class="opt" data-neg="0" style="min-width:100%">Vertrag annehmen<small>${fmtMoney(w)}/Jahr · sicher</small></div>
+        <div class="opt" data-neg="1" style="min-width:100%">Mehr fordern (+20%)<small>${fmtMoney(w*1.2)}/Jahr · Erfolg ~${Math.round((leverage*0.7+0.05)*100)}%</small></div>
+        <div class="opt" data-neg="2" style="min-width:100%">Hart pokern (+45%)<small>${fmtMoney(w*1.45)}/Jahr · Erfolg ~${Math.round(leverage*0.45*100)}% – kann platzen</small></div>
+      </div>
+    </div>
+    <button class="ghost" id="negback">← Zurück</button>`;
+  document.getElementById('lenopts').onclick=e=>{const b=e.target.closest('[data-len]');if(!b)return;_negLength=+b.dataset.len;renderNegotiation();};
+  document.getElementById('clausetoggle').onclick=()=>{_negClause=!_negClause;renderNegotiation();};
+  document.querySelectorAll('[data-neg]').forEach(b=>b.onclick=()=>negotiate(+b.dataset.neg, w, leverage));
+  document.getElementById('negback').onclick=()=>_negBack();
+}
+function negotiate(choice, w, leverage){
+  const o=_negOffer; let wage=w, msg="Vertrag zu den ausgehandelten Konditionen unterschrieben.";
+  if(choice===1){
+    if(R()<leverage*0.7+0.05){ wage=Math.round(w*1.2*10)/10; msg="Der Klub gibt etwas nach – mehr Gehalt! 💰"; }
+    else { wage=w; msg="Der Klub bleibt hart beim Grundgehalt."; }
+  } else if(choice===2){
+    const p=leverage*0.45, roll=R();
+    if(roll<p){ wage=Math.round(w*1.45*10)/10; msg="Pokerface! Ein Topgehalt erkämpft! 💰💰"; }
+    else if(roll<p+0.3){ wage=w; msg="Der Klub lässt sich nicht erpressen – Grundgehalt."; }
+    else { P.morale=clamp((P.morale||65)-5,0,100); renderNegBust(); return; }
+  }
+  signClub(o, Math.round(wage*10)/10, msg);
+}
+function renderNegBust(){
+  app.innerHTML=`${playerBar()}<div class="card"><h2>💥 Verhandlung geplatzt</h2><div class="note bad">${_negOffer.club.n} zieht das Angebot zurück – zu gierig gepokert. (Moral −5)</div></div><button class="ghost" id="nb">← Zurück</button>`;
+  document.getElementById('nb').onclick=()=>_negBack();
+}
+function signClub(o, wage, msg){
+  const sameClub = P.club && P.club.n===o.club.n;
+  P.club={n:o.club.n,lg:o.club.lg,l:o.club.l}; P.clubs.add(o.club.n);
+  if(!sameClub) P.role = o.share>=0.7?"star" : o.share>=0.45?"rotation":"prospect";
+  P.wage=wage; P.contractYears=_negLength; P.releaseClause=_negClause;
+  app.innerHTML=`${playerBar()}
+    <div class="card"><h2>✍️ Unterschrieben bei ${o.club.n}</h2>
+      <div class="note good">${msg}</div>
+      <div class="kv"><span class="k">Gehalt</span><span class="v">${fmtMoney(wage)}/Jahr</span></div>
+      <div class="kv"><span class="k">Laufzeit</span><span class="v">${_negLength} Jahre${_negClause?' · mit Ausstiegsklausel':''}</span></div>
+      <div class="kv"><span class="k">Rolle</span><span class="v">${sameClub?roleLabel(P.role):o.role}</span></div>
+    </div>
+    <button class="primary" id="sok">Weiter ➜</button>`;
+  document.getElementById('sok').onclick=()=>_afterSign();
+}
+// Vertrag ausgelaufen: verlängern oder ablösefrei
+function renderContractExpiry(){
+  const cur=P.club;
+  app.innerHTML=`${playerBar()}
+    <div class="card"><h2>📄 Vertrag ausgelaufen</h2>
+      <p class="hint">Dein Vertrag bei ${cur.n} ist abgelaufen. Verlängern – oder ablösefrei einen neuen Klub suchen?</p>
+      <div class="opts">
+        <div class="opt" id="renew" style="min-width:100%">Bei ${cur.n} verlängern<small>neuen Vertrag aushandeln</small></div>
+        <div class="opt" id="freeagent" style="min-width:100%">Ablösefrei wechseln<small>Angebote anderer Klubs anhören</small></div>
+      </div>
+    </div>`;
+  document.getElementById('renew').onclick=()=>openNegotiation({club:{n:cur.n,lg:cur.lg,l:cur.l}, role:roleLabel(P.role), roleColor:'var(--acc)', share:baseShare()}, null, {back:renderContractExpiry, after:renderHub});
+  document.getElementById('freeagent').onclick=()=>{ P.transferRequested=true; renderFreeAgent(generateOffers(6.8, baseShare())); };
+}
+function renderFreeAgent(offers){
+  const cur=P.club;
+  if(!offers.length){
+    app.innerHTML=`${playerBar()}<div class="card"><h2>🆓 Ablösefrei</h2><div class="note bad">Aktuell will dich kein anderer Klub – du verlängerst notgedrungen.</div></div><button class="primary" id="fx">Verlängern</button>`;
+    document.getElementById('fx').onclick=()=>openNegotiation({club:{n:cur.n,lg:cur.lg,l:cur.l},role:roleLabel(P.role),roleColor:'var(--acc)',share:baseShare()}, null, {back:renderContractExpiry, after:renderHub});
+    return;
+  }
+  const rows=offers.map((o,i)=>`<div class="offer"><div style="flex:none">${clubBadge(o.club.n,34)}</div><div class="info"><b>${o.club.n}</b> <span class="lvlpill">Level ${o.club.l}</span><small>${o.club.lg} · Rolle: <span style="color:${o.roleColor}">${o.role}</span> · ablösefrei</small></div><button data-fa="${i}">Verhandeln</button></div>`).join("");
+  app.innerHTML=`${playerBar()}<div class="card"><h2>🆓 Ablösefreie Angebote</h2><p class="hint">Ohne Ablöse – aber das Gehalt musst du noch aushandeln.</p>${rows}</div><button class="ghost" id="faback">← Zurück</button>`;
+  document.querySelectorAll('[data-fa]').forEach(b=>b.onclick=()=>openNegotiation(offers[+b.dataset.fa], null, {back:()=>renderFreeAgent(offers), after:renderHub}));
+  document.getElementById('faback').onclick=renderContractExpiry;
+}
+
+/* ============================ INTERVIEW (jede 3. Saison) ============================ */
+const INTERVIEWS=[
+  {q:"Du sitzt zuletzt oft auf der Bank. Wie siehst du das?",
+   o:[{a:"Ich respektiere die Entscheidung und arbeite härter.",m:7,note:"Deine Reife kommt bei allen gut an."},
+      {a:"Ich bin klar besser als die, die spielen.",m:-8,note:"Schlagzeilen – die Kabine ist verstimmt."},
+      {a:"Kein Kommentar.",m:-1,note:"Neutral aufgenommen."},
+      {a:"Ich denke über einen Wechsel nach.",m:-4,note:"Unruhe im Verein."}]},
+  {q:"Was ist dein größtes Ziel?",
+   o:[{a:"Dem Team helfen, Titel zu gewinnen.",m:8,note:"Teamplayer! Trainer & Fans begeistert."},
+      {a:"Den Ballon d'Or gewinnen.",m:4,note:"Ambition kommt an."},
+      {a:"Das dickste Gehalt der Liga.",m:-6,note:"Wirkt geldgierig."},
+      {a:"Weiß ich noch nicht genau.",m:-2,note:"Wirkt unentschlossen."}]},
+  {q:"Nach einer bitteren Niederlage: Wer trägt die Schuld?",
+   o:[{a:"Ich hätte besser spielen müssen.",m:6,note:"Selbstkritik imponiert."},
+      {a:"Das ganze Team war schwach.",m:-3,note:"Mitspieler pikiert."},
+      {a:"Eindeutig der Schiedsrichter.",m:-5,note:"Ausreden kommen schlecht an."},
+      {a:"So ist Fußball manchmal.",m:1,note:"Diplomatisch."}]},
+  {q:"Ein Topklub wird mit dir in Verbindung gebracht.",
+   o:[{a:"Ich bin hier glücklich und fokussiert.",m:6,note:"Die Fans atmen auf."},
+      {a:"Jeder träumt von so einem Klub.",m:-3,note:"Dein Verein ist alarmiert."},
+      {a:"Das regelt mein Berater.",m:-1,note:"Neutral."},
+      {a:"Ich will da unbedingt hin.",m:-7,note:"Fans wenden sich ab."}]},
+  {q:"Social Media: Ein Hater provoziert dich hart.",
+   o:[{a:"Ignorieren und weiterarbeiten.",m:5,note:"Souverän."},
+      {a:"Mit Humor kontern.",m:3,note:"Deine Follower feiern dich."},
+      {a:"Wütend zurückschießen.",m:-6,note:"Ein PR-Desaster."},
+      {a:"Account komplett löschen.",m:0,note:"Kein großes Thema."}]},
+  {q:"Der Trainer hat dich öffentlich kritisiert.",
+   o:[{a:"Er hat recht, ich lege zu.",m:6,note:"Echte Profihaltung."},
+      {a:"Das klären wir intern.",m:3,note:"Vernünftig."},
+      {a:"Ich widerspreche öffentlich.",m:-7,note:"Machtkampf – Eskalation."},
+      {a:"Dazu sage ich nichts.",m:-1,note:"Neutral."}]},
+  {q:"Du hattest eine Traumsaison. Wie fühlst du dich?",
+   o:[{a:"Dankbar – ohne das Team ginge das nicht.",m:7,note:"Bescheidenheit kommt an."},
+      {a:"Ich bin einfach der Beste.",m:-4,note:"Arrogant, finden viele."},
+      {a:"Da geht noch mehr.",m:4,note:"Hungrig – die Fans lieben es."},
+      {a:"War auch etwas Glück dabei.",m:2,note:"Sympathisch-bescheiden."}]},
+  {q:"Ein Kind fragt vor dem Spiel nach einem Autogramm.",
+   o:[{a:"Klar – immer Zeit für die Fans.",m:7,note:"Herzen gewonnen."},
+      {a:"Nach dem Spiel, versprochen.",m:2,note:"Verständnisvoll."},
+      {a:"Jetzt nicht, ich bin fokussiert.",m:-2,note:"Wirkt etwas kühl."},
+      {a:"Vorbeigehen.",m:-6,note:"Enttäuschte Fans."}]}
+];
+function renderInterview(){
+  const iv=pick(INTERVIEWS);
+  app.innerHTML=`
+    ${playerBar()}
+    <div class="card">
+      <h2>🎤 Presse-Interview · ${P.year}</h2>
+      <p style="font-size:15px;font-weight:600;margin:6px 0 12px">„${iv.q}"</p>
+      <div class="opts" id="ivopts">${iv.o.map((op,i)=>`<div class="opt" data-iv="${i}" style="min-width:100%;text-align:left">${op.a}</div>`).join("")}</div>
+      <p class="halfopen" style="text-align:left;margin-top:10px">Deine Antwort verändert deine Moral – und Moral wirkt sich auf deine Leistung aus.</p>
+    </div>`;
+  document.getElementById('ivopts').onclick=e=>{ const b=e.target.closest('[data-iv]'); if(!b) return; answerInterview(iv.o[+b.dataset.iv]); };
+}
+function answerInterview(op){
+  P.morale=clamp((P.morale!=null?P.morale:65)+op.m,0,100);
+  const sign=op.m>0?`+${op.m}`:`${op.m}`;
+  app.innerHTML=`
+    ${playerBar()}
+    <div class="card">
+      <h2>🎤 Reaktion</h2>
+      <div class="note ${op.m>=3?'good':op.m<=-3?'bad':''}">${op.note}</div>
+      <div class="kv"><span class="k">Moral</span><span class="v">${sign} → ${Math.round(P.morale)}/100</span></div>
+    </div>
+    <button class="primary" id="ivok">Weiter ➜ Saison</button>`;
+  document.getElementById('ivok').onclick=renderHub;
+}
+
+function nextSeason(){
+  P.age++; P.year++; P.seasonNo=(P.seasonNo||1)+1;
+  if(P.age>P.retireAge || (P.ovr<60 && P.age>33)){ renderLegacy(); return; }
+  if((P.contractYears||0)<=0){ renderContractExpiry(); return; }
+  if(P.seasonNo%3===0){ renderInterview(); return; }
+  renderHub();
+}
+
+/* ============================ LEGACY ============================ */
+function renderLegacy(){
+  clearSave();
+  const gp=posOf(P.pos), fam=gp.fam, isAtt=(fam==="score"||fam==="create");
+  const gloryTotal = gp.gloryKey==="goals"?P.goals:gp.gloryKey==="assists"?P.assists:P.cs;
+  const gloryLabel = gp.gloryKey==="cs"?"Zu-Null":gp.gloryKey==="assists"?"Assists":"Tore";
+  const prod = fam==="score"?P.goals*0.35 : fam==="create"?(P.assists*0.3+P.goals*0.2) : P.cs*0.45;
+  const score = P.titles.length*3 + P.ballon*16 + P.intlGoals*0.4 + P.caps*0.12 + prod + P.peakOVR*0.6;
+  let verdict,vsub;
+  if(score>=140){verdict="⚽ G.O.A.T.";vsub="Einer der Größten aller Zeiten.";}
+  else if(score>=105){verdict="🌟 Weltstar-Legende";vsub="Dein Name gehört in die Geschichtsbücher.";}
+  else if(score>=75){verdict="🏆 Vereinslegende";vsub="Ein Star, an den man sich lange erinnert.";}
+  else if(score>=48){verdict="💪 Solider Profi";vsub="Eine respektable Karriere auf hohem Niveau.";}
+  else {verdict="👟 Ehrlicher Kämpfer";vsub="Vom Underdog nie ganz nach oben – aber ein echter Profi.";}
+
+  const clubList=[...P.clubs].join(" · ");
+  const trophyChips=P.titles.length?P.titles.map(t=>`<span class="trophy">🏆 ${t}</span>`).join(""):'<span class="hint">Keine großen Titel – aber eine gespielte Karriere.</span>';
+  const hist=P.history.map(h=>`<tr><td>${h.year}</td><td>${h.club}</td><td>${h.age}</td><td>${h.ovr}</td><td>${h.glory}</td><td>${h.apps}</td></tr>`).join("");
+  const sec = isAtt
+    ? `<div class="stat"><div class="n">${P.goals}</div><div class="l">Tore</div></div><div class="stat"><div class="n">${P.assists}</div><div class="l">Assists</div></div>`
+    : `<div class="stat"><div class="n">${P.cs}</div><div class="l">Zu-Null</div></div><div class="stat"><div class="n">${P.goals+P.assists}</div><div class="l">Scorer</div></div>`;
+
+  app.innerHTML=`
+  <div class="card">
+    <div class="verdict">
+      <div style="width:76px;height:76px;margin:0 auto 6px;border-radius:50%;overflow:hidden">${avatarComposite(P.av,76)}</div>
+      <div class="big">${verdict}</div>
+      <div class="sm">${P.name} · ${P.pos} ${gp.label} · ${P.nat}</div>
+      <div class="sm">Karriere beendet mit ${P.age} · Peak-OVR ${P.peakOVR}</div>
+    </div>
+    <div class="statgrid" style="margin-top:14px">
+      <div class="stat"><div class="n">${gloryTotal}</div><div class="l">${gloryLabel} (Karriere)</div></div>
+      <div class="stat"><div class="n">${P.titles.length}</div><div class="l">Titel</div></div>
+      <div class="stat"><div class="n">${P.ballon}</div><div class="l">Ballon d'Or</div></div>
+    </div>
+    <div class="statgrid">
+      ${sec}
+      <div class="stat"><div class="n">${P.caps}</div><div class="l">Länderspiele (${P.intlGoals}⚽)</div></div>
+    </div>
+    <p class="hint" style="margin-top:14px"><b>Vereine:</b> ${clubList}</p>
+    <p class="hint" style="margin-top:6px"><b>💰 Karriere-Verdienst:</b> ${fmtMoney(P.money)}</p>
+    <div class="trophies">${trophyChips}</div>
+  </div>
+  <div class="card">
+    <h2>Karriereverlauf</h2>
+    <table class="career">
+      <thead><tr><th>Jahr</th><th>Verein</th><th>Alter</th><th>OVR</th><th>${gloryLabel}</th><th>Sp.</th></tr></thead>
+      <tbody>${hist}</tbody>
+    </table>
+  </div>
+  <button class="primary" id="again">Neue Karriere starten ⚽</button>`;
+  document.getElementById('again').onclick=()=>{draft={name:"",age:17,nat:NATIONS[5].name,pos:"ST",style:0,av:Object.assign({},DEFAULT_AV),mode:0,goldenOptions:null,startClubName:null,jerseyName:"",number:0,foot:"Rechts",pos2:""};renderCreation();};
+}
+
+/* ============================ GO ============================ */
+if('serviceWorker' in navigator){ window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{})); }
+renderCreation();
+</script>
+</body>
+</html>
