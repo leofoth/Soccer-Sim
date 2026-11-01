@@ -1664,6 +1664,13 @@ function renderLegacy(){
 /* ============================ GO ============================ */
 if('serviceWorker' in navigator){ window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{})); }
 renderCreation();
+// Persistent entry point to the touch-controlled landscape match prototype.
+const matchEntry=document.createElement('a');
+matchEntry.href='./match.html';
+matchEntry.textContent='⚽ MATCH SPIELEN';
+matchEntry.setAttribute('aria-label','Spielbare Partie im Querformat starten');
+Object.assign(matchEntry.style,{position:'fixed',right:'14px',bottom:'14px',zIndex:'1000',padding:'13px 17px',borderRadius:'14px',background:'#00e07a',color:'#04240f',fontWeight:'900',textDecoration:'none',boxShadow:'0 6px 24px #0008',fontSize:'14px'});
+document.body.appendChild(matchEntry);
 </script>
 </body>
 </html>
