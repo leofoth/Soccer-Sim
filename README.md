@@ -1,31 +1,25 @@
-# Soccer Sim — Football Career Manager
+# Touchline Career ⚽
 
-Ein deutscher, direkt im Browser spielbarer Fußball-Karrieremanager. Übernimm einen echten Club, plane Transfers, simuliere Spieltage und schreibe deine eigene Vereinsgeschichte.
+Ein deutschsprachiger Fußball-Karrieremodus für den Browser: Saisons simulieren, Ligatabellen verfolgen, Spieler trainieren, Transfers verhandeln und Ereignisse erleben.
 
 ## Direkt spielen
-Öffne **[career-mode.html](./career-mode.html)** im Repository oder starte GitHub Pages (Settings → Pages → Deploy from a branch → `main` / `/(root)`). Nach Aktivierung ist das Spiel unter `https://leofoth.github.io/Soccer-Sim/career-mode.html` erreichbar.
+Öffne [Touchline Career](https://leofoth.github.io/Soccer-Sim/career.html) nach Aktivierung von GitHub Pages.
 
 ## Features
-- 50+ reale Clubs aus Premier League, Bundesliga, La Liga, Serie A und Ligue 1
-- Saison für Saison: Spielplan, dynamische Ergebnisse, Tabelle, Meister und Saisonprämien
-- Transfermarkt mit Spielerwerten, Kaderverwaltung, eingehenden Angeboten und Verhandlungen
-- Zufällige Ereignisse: Sponsor-Deals, Kabinenstimmung, Talententwicklung, Betriebskosten und Fanreaktionen
-- Spieler mit Alter, Position, Gesamtstärke, Potenzial, Marktwert und Vertragslaufzeit
-- Newsfeed, Saisonarchiv, Budgets, Team-Moral und lokales Autosave
-- Responsive Layout für Handy und Desktop, ohne Installation oder Build-Schritt
+- 60 echte Vereinsnamen aus Premier League, LaLiga, Bundesliga, Serie A und Ligue 1
+- Saison für Saison simulierte Spieltage und dynamische Ligatabellen
+- Transferangebote, Gegenangebote, Ablehnungen und Verpflichtungen
+- Spieler mit Position, Alter, Stärke, Potenzial, Fitness, Moral und Marktwert
+- Training, Regeneration und zufällige Vereinsereignisse
+- Vorstandsnachrichten und Saisonarchiv
+- Lokales Autosave und JSON-Export
 
-## Spielen
-1. Öffne `career-mode.html` in einem Browser oder hoste das Repository über GitHub Pages.
-2. Wähle einen Verein und gib deinen Managernamen ein.
-3. Simuliere Spieltage über „Nächster Spieltag“.
-4. Nutze Kader und Transfermarkt, um dein Team umzubauen.
-5. Spielstände werden automatisch lokal in deinem Browser gespeichert.
+## GitHub Pages aktivieren
+1. Öffne **Settings → Pages** in diesem Repository.
+2. Wähle **Deploy from a branch**, Branch `main`, Ordner `/ (root)` und speichere.
+3. Nach dem Deployment: https://leofoth.github.io/Soccer-Sim/career.html
 
-## Technologie
-Vanilla HTML, CSS und JavaScript. Keine Abhängigkeiten, kein Backend. Das Spiel nutzt Clubnamen als Text und einfache Emoji-Marker; es enthält keine offiziellen Vereinslogos oder Spielerbilder. Vereinsdaten sind ein spielerischer Startdatensatz, keine Live-Daten. Dieses Fanprojekt ist nicht mit Vereinen oder Ligen verbunden.
+## Lokal spielen
+Öffne `career.html` in einem aktuellen Browser. Kein Build-System erforderlich.
 
-## Weitere Teile
-- `index.html`: bestehender Karriere-Hub
-- `match.html`: spielbarer Match-Prototyp
-- `game-core.js`: wiederverwendbare Spielregeln
-- `career-mode.html`: eigenständiger Saison- und Transfermanager
+Hinweis: Vereinsnamen sind echt; Spieler, Werte, Transfers und Ereignisse sind simulierte Spielinhalte und keine offiziellen Live-Daten. Unabhängiges Fanprojekt ohne Verbindung zu Vereinen oder Ligen.
